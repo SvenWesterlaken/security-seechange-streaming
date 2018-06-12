@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SeeChange-Streaming</string>
+    <string name="login_mismatch">Login not successful</string>
 </resources>
