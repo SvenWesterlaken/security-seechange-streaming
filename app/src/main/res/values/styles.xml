@@ -8,6 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorIcons">@color/colorSecondary</item>
         <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="android:listDivider">@null</item>
     </style>
 
     <style name="AppTheme.NoActionBar">

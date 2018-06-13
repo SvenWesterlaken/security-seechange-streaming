@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="Account"
+        android:layout="@layout/row_preference_category">
+
+        <EditTextPreference
+            android:capitalize="words"
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/account"
+            android:inputType="textCapWords"
+            android:key="pref_username"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Username"/>
+
+        <EditTextPreference
+            android:capitalize="sentences"
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/comment_text"
+            android:inputType="textMultiLine"
+            android:key="pref_slogan"
+            android:layout="@layout/row_preference"
+            android:selectAllOnFocus="true"
+            android:title="Slogan"/>
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="Chat Developer Settings"
+        android:layout="@layout/row_preference_category">
+
+        <EditTextPreference
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/access_point_network"
+            android:inputType="text"
+            android:key="pref_chat_ip"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="IP Address"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/ethernet"
+            android:inputType="number"
+            android:key="pref_chat_port"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Port"/>
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="Stream Developer Settings"
+        android:layout="@layout/row_preference_category">
+
+        <EditTextPreference
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/access_point_network"
+            android:inputType="text"
+            android:key="pref_stream_ip"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="IP Address"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/ethernet"
+            android:inputType="number"
+            android:key="pref_stream_port"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Port"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
