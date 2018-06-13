@@ -28,10 +28,11 @@ class LoginActivity : BaseActivity() {
 
     fun login(view: View) {
         val username =  this.findViewById<EditText>(R.id.editText)
-        val password = this.findViewById<EditText>(R.id.editText)
+        val password = this.findViewById<EditText>(R.id.editText2)
         if (loginViewModel.isUsernameAndPasswordValid(username.text.toString(), password.text.toString())) {
-            loginViewModel.login()
-            openStreamingActivity();
+            loginViewModel.login(username.text.toString(), password.text.toString())
+                        openStreamingActivity();
+
         } else {
             Toast.makeText(this, getString(R.string.login_mismatch), Toast.LENGTH_SHORT).show()
         }
