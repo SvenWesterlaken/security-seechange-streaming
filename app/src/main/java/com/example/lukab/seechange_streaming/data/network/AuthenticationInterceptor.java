@@ -1,5 +1,9 @@
 package com.example.lukab.seechange_streaming.data.network;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import java.io.IOException;
 
 import okhttp3.Interceptor;
@@ -20,7 +24,7 @@ public class AuthenticationInterceptor  implements Interceptor{
 			Request original = chain.request();
 			
 			Request.Builder builder = original.newBuilder()
-					.header("Authorization", authToken);
+					.header("token", authToken);
 			
 			Request request = builder.build();
 			return chain.proceed(request);

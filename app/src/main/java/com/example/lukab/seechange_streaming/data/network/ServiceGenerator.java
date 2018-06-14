@@ -28,17 +28,7 @@ public class ServiceGenerator {
         return retrofit.create(serviceClass);
     }
     
-    public static <S> S createService(
-            Class<S> serviceClass, String username, String password) {
-        if (!TextUtils.isEmpty(username)
-                && !TextUtils.isEmpty(password)) {
-            String authToken = Credentials.basic(username, password);
-             return createService(serviceClass, authToken);
-        }
-        
-        return createService(serviceClass, null);
-    }
-    
+
     public static <S> S createService(
             Class<S> serviceClass, final String authToken) {
         if (!TextUtils.isEmpty(authToken)) {

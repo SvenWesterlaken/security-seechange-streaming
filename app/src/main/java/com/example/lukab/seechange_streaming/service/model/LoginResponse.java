@@ -1,4 +1,4 @@
-package com.example.lukab.seechange_streaming.data.network;
+package com.example.lukab.seechange_streaming.service.model;
 
 import com.google.gson.annotations.SerializedName;
 
