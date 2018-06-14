@@ -32,7 +32,7 @@
         android:layout="@layout/row_preference_category">
 
         <EditTextPreference
-            android:defaultValue="@string/unknown_value"
+            android:defaultValue="127.0.0.1"
             android:icon="@drawable/access_point_network"
             android:inputType="text"
             android:key="pref_chat_ip"
@@ -43,7 +43,7 @@
             android:title="IP Address"/>
 
         <EditTextPreference
-            android:defaultValue="@string/unknown_value"
+            android:defaultValue="@string/default_chat_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
             android:key="pref_chat_port"
