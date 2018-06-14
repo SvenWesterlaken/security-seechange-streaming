@@ -11,4 +11,5 @@
     <string name="viewers_cunt">100k</string>
     <string name="hint_chat_message_input">Typ your chat message…</string>
     <string name="header_livestream_chat">Livestream Chat</string>
+    <string name="login_mismatch">Login not successful</string>
 </resources>
