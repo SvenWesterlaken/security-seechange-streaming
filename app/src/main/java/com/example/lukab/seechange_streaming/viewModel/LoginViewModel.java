@@ -5,13 +5,14 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.example.lukab.seechange_streaming.data.network.LoginClient;
-import com.example.lukab.seechange_streaming.service.model.LoginResponse;
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
+import com.example.lukab.seechange_streaming.service.model.LoginResponse;
 
 
 import org.json.JSONException;
@@ -22,13 +23,15 @@ import retrofit2.Response;
 import retrofit2.Call;
 import retrofit2.Callback;
 
-import static android.content.Context.MODE_PRIVATE;
-
 public class LoginViewModel extends AndroidViewModel {
+	private ServiceGenerator serviceGenerator;
 	
 	
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
+		String url = "http://" + sharedPreferences.getString("pref_seechange_ip", "10.0.2.2") + ":" + sharedPreferences.getInt("pref_stream_user_api_port", 3000);
+		this.serviceGenerator = new ServiceGenerator(url);
 	}
 	
 	public boolean isUsernameAndPasswordValid(String username, String password) {
@@ -44,8 +47,7 @@ public class LoginViewModel extends AndroidViewModel {
 	
 	public LiveData<Boolean> login(String username, String password) {
 		
-		LoginClient loginService =
-				ServiceGenerator.createService(LoginClient.class);
+		LoginClient loginService = this.serviceGenerator.createService(LoginClient.class);
 		JSONObject paramObject = new JSONObject();
 		RequestBody body;
 		final MutableLiveData<Boolean> loggedIn = new MutableLiveData<>();

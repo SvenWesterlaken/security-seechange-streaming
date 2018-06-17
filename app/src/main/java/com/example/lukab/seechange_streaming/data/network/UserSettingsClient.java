@@ -1,5 +1,7 @@
 package com.example.lukab.seechange_streaming.data.network;
 
+import com.example.lukab.seechange_streaming.service.model.SeeChangeApiResponse;
+
 import org.json.JSONObject;
 
 import okhttp3.MultipartBody;
@@ -20,14 +22,14 @@ public interface UserSettingsClient {
             "Content-type: application/json"
     })
     @PUT(SettingParametersKt.updatePublicNameUrl)
-    Call<String> updatePublicName(@Body RequestBody params);
+    Call<SeeChangeApiResponse> updatePublicName(@Body RequestBody params);
 
     @Headers({
             "Accept: application/json",
             "Content-type: application/json"
     })
     @PUT(SettingParametersKt.updateSloganUrl)
-    Call<String> updateSlogan(@Body RequestBody params);
+    Call<SeeChangeApiResponse> updateSlogan(@Body RequestBody params);
 
     @Multipart
     @PUT(SettingParametersKt.avatarUrl)

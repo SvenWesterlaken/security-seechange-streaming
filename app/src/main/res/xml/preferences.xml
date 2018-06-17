@@ -28,14 +28,14 @@
 
     </PreferenceCategory>
     <PreferenceCategory
-        android:title="Chat Developer Settings"
+        android:title="SeeChange Server Developer Settings"
         android:layout="@layout/row_preference_category">
 
         <EditTextPreference
             android:defaultValue="127.0.0.1"
             android:icon="@drawable/access_point_network"
             android:inputType="text"
-            android:key="pref_chat_ip"
+            android:key="pref_seechange_ip"
             android:layout="@layout/row_preference"
             android:maxLines="1"
             android:selectAllOnFocus="true"
@@ -55,14 +55,14 @@
 
     </PreferenceCategory>
     <PreferenceCategory
-        android:title="Stream Developer Settings"
+        android:title="TruYou Server Developer Settings"
         android:layout="@layout/row_preference_category">
 
         <EditTextPreference
             android:defaultValue="@string/unknown_value"
             android:icon="@drawable/access_point_network"
             android:inputType="text"
-            android:key="pref_stream_ip"
+            android:key="pref_truyou_ip"
             android:layout="@layout/row_preference"
             android:maxLines="1"
             android:selectAllOnFocus="true"

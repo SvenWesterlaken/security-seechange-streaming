@@ -1,5 +1,6 @@
 package com.example.lukab.seechange_streaming.ui.activities
 
+import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.Observer
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
@@ -18,7 +19,7 @@ import kotlin.math.log
 class LoginActivity : BaseActivity() {
 
 
-    lateinit var loginViewModel: LoginViewModel;
+    private lateinit var loginViewModel: LoginViewModel;
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,21 +30,18 @@ class LoginActivity : BaseActivity() {
     }
 
     fun login(view: View) {
-        val username =  this.findViewById<EditText>(R.id.editText)
-        val password = this.findViewById<EditText>(R.id.editText2)
+        val username =  this.findViewById (R.id.NameInput) as EditText
+        val password = this.findViewById(R.id.PasswordInput) as EditText
 
         if (loginViewModel.isUsernameAndPasswordValid(username.text.toString(), password.text.toString())) {
 
-            loginViewModel.login(username.text.toString(), password.text.toString()).observe(this, object : Observer<Boolean> {
-
-                override fun onChanged(@Nullable isLoggedIn: Boolean?) {
-                    if (isLoggedIn == true) {
-                    //…
-                        openStreamingActivity();} else {
-                        Toast.makeText(applicationContext, getString(R.string.login_mismatch), Toast.LENGTH_SHORT).show()
-                    }
+            loginViewModel.login(username.text.toString(), password.text.toString()).observe(this, Observer<Boolean> { isLoggedIn ->
+                if (isLoggedIn == true) {
+                    openStreamingActivity();
+                } else {
+                    Toast.makeText(applicationContext, getString(R.string.login_mismatch), Toast.LENGTH_SHORT).show()
                 }
-                })
+            })
         } else {
             Toast.makeText(this, getString(R.string.login_mismatch), Toast.LENGTH_SHORT).show()
         }
