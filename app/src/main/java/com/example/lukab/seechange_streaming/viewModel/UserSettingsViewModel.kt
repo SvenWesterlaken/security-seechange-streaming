@@ -5,16 +5,18 @@ import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.preference.*
-import android.util.Log
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator
-import com.example.lukab.seechange_streaming.data.network.UserSettingsClient
+import com.example.lukab.seechange_streaming.data.network.clients.UserSettingsClient
 import com.example.lukab.seechange_streaming.service.model.SeeChangeApiResponse
+import okhttp3.MediaType
+import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.Callback
 import okhttp3.RequestBody
 import retrofit2.Response
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.File
 
 
 class UserSettingsViewModel(application: Application, private val username: String): AndroidViewModel(application) {
@@ -84,6 +86,25 @@ class UserSettingsViewModel(application: Application, private val username: Stri
         }
 
         return succeeded
+    }
+
+    fun uploadAvatar(image: File): LiveData<Boolean> {
+        val succeeded: MutableLiveData<Boolean> = MutableLiveData()
+        val filePart = MultipartBody.Part.createFormData("file", image.name, RequestBody.create(MediaType.parse("image/*"), image))
+        val username = RequestBody.create(okhttp3.MediaType.parse("text/plain; charset=utf-8"), this.username)
+
+        settingsClient.updateAvatar(filePart, username).enqueue(object: Callback<SeeChangeApiResponse> {
+            override fun onResponse(call: Call<SeeChangeApiResponse>, response: Response<SeeChangeApiResponse>) {
+                succeeded.value = response.isSuccessful
+            }
+
+            override fun onFailure(call: Call<SeeChangeApiResponse>, t: Throwable) {
+                succeeded.value = false
+            }
+        })
+
+        return succeeded
+
     }
 
 

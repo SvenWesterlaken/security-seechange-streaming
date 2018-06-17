@@ -1,4 +1,4 @@
-package com.example.lukab.seechange_streaming.ui.activities
+package com.example.lukab.seechange_streaming.ui.fragments
 
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleOwner
@@ -79,30 +79,32 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
 
     private fun updatePreference(preference: Preference?, key: String?) {
         val sharedPreferences: SharedPreferences = preferenceManager.sharedPreferences
-        if (key.equals("pref_username")) {
-            val updatedReference = sharedPreferences.getString(key, null)
+        when {
+            key.equals("pref_username") -> {
+                val updatedReference = sharedPreferences.getString(key, null)
 
 
-            userSettingsViewModel.updatePublicName(updatedReference).observe(this, Observer<Boolean> { succeeded ->
-                if(succeeded!!) {
-                    preference?.summary = updatedReference
-                } else {
-                    sharedPreferences.edit().putString(key, preference!!.summary.toString()).apply()
-                }
+                userSettingsViewModel.updatePublicName(updatedReference).observe(this, Observer<Boolean> { succeeded ->
+                    if(succeeded!!) {
+                        preference?.summary = updatedReference
+                    } else {
+                        sharedPreferences.edit().putString(key, preference!!.summary.toString()).apply()
+                    }
 
-            })
-        } else if (key.equals("pref_slogan")) {
-            val updatedReference = sharedPreferences.getString(key, null)
+                })
+            }
+            key.equals("pref_slogan") -> {
+                val updatedReference = sharedPreferences.getString(key, null)
 
-            userSettingsViewModel.updateSlogan(updatedReference).observe(this, Observer<Boolean> { succeeded ->
-                if(succeeded!!) {
-                    preference?.summary = updatedReference
-                } else {
-                    sharedPreferences.edit().putString(key, preference!!.summary.toString()).apply()
-                }
-            })
-        } else {
-            preference?.summary = sharedPreferences.getString(key, "Unknown")
+                userSettingsViewModel.updateSlogan(updatedReference).observe(this, Observer<Boolean> { succeeded ->
+                    if(succeeded!!) {
+                        preference?.summary = updatedReference
+                    } else {
+                        sharedPreferences.edit().putString(key, preference!!.summary.toString()).apply()
+                    }
+                })
+            }
+            else -> preference?.summary = sharedPreferences.getString(key, "Unknown")
         }
 
     }

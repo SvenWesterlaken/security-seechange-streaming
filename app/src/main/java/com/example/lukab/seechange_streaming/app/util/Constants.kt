@@ -1,5 +1,6 @@
-package com.example.lukab.seechange_streaming.data.network
+package com.example.lukab.seechange_streaming.app.util
 
+//User Settings
 private const val baseUrl: String = "/api"
 private const val userUrl: String = "$baseUrl/user"
 

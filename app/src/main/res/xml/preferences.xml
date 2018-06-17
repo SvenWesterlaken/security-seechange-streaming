@@ -26,6 +26,19 @@
             android:selectAllOnFocus="true"
             android:title="Slogan"/>
 
+        <Preference
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/account_circle"
+            android:key="pref_avatar"
+            android:layout="@layout/row_preference"
+            android:title="Avatar">
+
+            <intent
+                android:targetPackage="com.example.lukab.seechange_streaming"
+                android:targetClass="com.example.lukab.seechange_streaming.ui.activities.AvatarActivity"/>
+
+        </Preference>
+
     </PreferenceCategory>
     <PreferenceCategory
         android:title="SeeChange Server Developer Settings"

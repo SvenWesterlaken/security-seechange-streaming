@@ -2,11 +2,10 @@ package com.example.lukab.seechange_streaming.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import com.example.lukab.seechange_streaming.R
-import com.example.lukab.seechange_streaming.app.util.closeSoftKeyboard
+import com.example.lukab.seechange_streaming.ui.custom.closeSoftKeyboard
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 
 
@@ -19,13 +18,13 @@ class StreamingActivity : BaseActivity(), View.OnFocusChangeListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_streaming)
 
-        this.panelSlider = findViewById(R.id.sliding_layout) as SlidingUpPanelLayout
-        this.chatInputText = findViewById(R.id.ChatEditText) as EditText
+        this.panelSlider = findViewById(R.id.sliding_layout)
+        this.chatInputText = findViewById(R.id.ChatEditText)
         this.chatInputText.onFocusChangeListener = this
     }
 
     override fun onBackPressed() {
-        if (this.panelSlider.panelState.toString() == "EXPANDED") {
+        if (this.panelSlider.panelState == SlidingUpPanelLayout.PanelState.EXPANDED) {
             this.panelSlider.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
         } else {
             super.onBackPressed()
