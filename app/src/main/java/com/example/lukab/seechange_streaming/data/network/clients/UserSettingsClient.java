@@ -31,7 +31,7 @@ public interface UserSettingsClient {
 
     @Multipart
     @PUT(ConstantsKt.avatarUrl)
-    Call<SeeChangeApiResponse> updateAvatar(@Part MultipartBody.Part filePart, @Part("username") RequestBody username);
+    Call<SeeChangeApiResponse> updateAvatar(@Part MultipartBody.Part image, @Part("username") RequestBody username);
 
     @Headers({
             "Accept: application/json",
