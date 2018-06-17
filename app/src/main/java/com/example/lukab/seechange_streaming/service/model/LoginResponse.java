@@ -1,6 +1,9 @@
 package com.example.lukab.seechange_streaming.service.model;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
+
 
 public class LoginResponse {
 	@SerializedName("message")
@@ -13,4 +16,13 @@ public class LoginResponse {
 	
 	public String getToken(){return token;}
 	
+	@SerializedName("privateKey")
+	public String privateKey;
+	
+	public String getPrivateKey(){ return privateKey; }
+	
+	@SerializedName("publicKey")
+	public String publicKey;
+	
+	public String getPublicKey(){ return publicKey; }
 }

@@ -23,4 +23,5 @@ open class BaseActivity : AppCompatActivity() {
     }
 
 
+
 }
