@@ -4,28 +4,29 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
-import android.preference.*
+import android.preference.PreferenceManager
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator
 import com.example.lukab.seechange_streaming.data.network.clients.UserSettingsClient
 import com.example.lukab.seechange_streaming.service.model.SeeChangeApiResponse
 import okhttp3.MediaType
 import okhttp3.MultipartBody
-import retrofit2.Call
-import retrofit2.Callback
 import okhttp3.RequestBody
-import retrofit2.Response
 import org.json.JSONException
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 
 
 class UserSettingsViewModel(application: Application, private val username: String): AndroidViewModel(application) {
     private val serviceGenerator: ServiceGenerator
     private val settingsClient: UserSettingsClient
+    private val url: String
 
     init {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.applicationContext)
-        val url = "http://${sharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${sharedPreferences.getInt("pref_stream_user_api_port", 8081)}"
+        this.url = "http://${sharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${sharedPreferences.getString("pref_seechange_api_port", "8081")}"
         this.serviceGenerator = ServiceGenerator(url)
         this.settingsClient = this.serviceGenerator.createService(UserSettingsClient::class.java)
     }

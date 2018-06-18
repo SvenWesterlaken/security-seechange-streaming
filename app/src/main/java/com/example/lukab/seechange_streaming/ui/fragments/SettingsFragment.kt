@@ -11,12 +11,15 @@ import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import com.example.lukab.seechange_streaming.R
 import com.example.lukab.seechange_streaming.viewModel.UserSettingsViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private lateinit var userSettingsViewModel: UserSettingsViewModel
     private lateinit var lifeCycleRegistry: LifecycleRegistry
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +27,7 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
         this.lifeCycleRegistry = LifecycleRegistry(this)
         this.lifeCycleRegistry.markState(Lifecycle.State.CREATED)
         this.userSettingsViewModel = UserSettingsViewModel(activity.application, "svenwesterlaken")
+        this.sharedPreferences = preferenceManager.sharedPreferences
         initSummary()
     }
 
@@ -32,6 +36,7 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        this.sharedPreferences = sharedPreferences!!
         updatePreference(findPreference(key), key)
     }
 
@@ -73,20 +78,22 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
     }
 
     private fun initPreference(preference: Preference?, key: String?) {
-        val sharedPreferences: SharedPreferences = preferenceManager.sharedPreferences
-        preference?.summary = sharedPreferences.getString(key, "Unknown")
+        if(key.equals("pref_avatar")) {
+            preference?.summary = formatAvatarDate(key)
+        } else {
+            preference?.summary = sharedPreferences.getString(key, "Unknown")
+        }
+
     }
 
     private fun updatePreference(preference: Preference?, key: String?) {
-        val sharedPreferences: SharedPreferences = preferenceManager.sharedPreferences
         when {
             key.equals("pref_username") -> {
-                val updatedReference = sharedPreferences.getString(key, null)
+                val updatedPreference = sharedPreferences.getString(key, null)
 
-
-                userSettingsViewModel.updatePublicName(updatedReference).observe(this, Observer<Boolean> { succeeded ->
+                userSettingsViewModel.updatePublicName(updatedPreference).observe(this, Observer<Boolean> { succeeded ->
                     if(succeeded!!) {
-                        preference?.summary = updatedReference
+                        preference?.summary = updatedPreference
                     } else {
                         sharedPreferences.edit().putString(key, preference!!.summary.toString()).apply()
                     }
@@ -94,18 +101,32 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
                 })
             }
             key.equals("pref_slogan") -> {
-                val updatedReference = sharedPreferences.getString(key, null)
+                val updatedPreference = sharedPreferences.getString(key, null)
 
-                userSettingsViewModel.updateSlogan(updatedReference).observe(this, Observer<Boolean> { succeeded ->
+                userSettingsViewModel.updateSlogan(updatedPreference).observe(this, Observer<Boolean> { succeeded ->
                     if(succeeded!!) {
-                        preference?.summary = updatedReference
+                        preference?.summary = updatedPreference
                     } else {
                         sharedPreferences.edit().putString(key, preference!!.summary.toString()).apply()
                     }
                 })
             }
+            key.equals("pref_avatar") -> {
+                preference?.summary = formatAvatarDate(key)
+            }
             else -> preference?.summary = sharedPreferences.getString(key, "Unknown")
         }
 
+    }
+
+    private fun formatAvatarDate(key: String?): String {
+        val milliseconds = sharedPreferences.getLong(key, 0)
+        val dateFormat = SimpleDateFormat("MMMM d yyyy, HH:mm", Locale.US)
+
+        return if (milliseconds < 2) {
+            "No avatar set"
+        } else {
+            "Last Modified: ${dateFormat.format(Date(milliseconds))}"
+        }
     }
 }

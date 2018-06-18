@@ -31,6 +31,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.activities.AvatarActivity"
+            android:label="@string/title_activity_avatar"
             android:parentActivityName=".ui.activities.SettingsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>

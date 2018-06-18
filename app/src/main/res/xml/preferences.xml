@@ -56,15 +56,37 @@
             android:title="IP Address"/>
 
         <EditTextPreference
-            android:defaultValue="@string/default_chat_port"
+            android:defaultValue="@string/default_stream_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
-            android:key="pref_chat_port"
+            android:key="pref_seechange_stream_port"
             android:layout="@layout/row_preference"
             android:maxLines="1"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="Port"/>
+            android:title="Stream Port"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_api_port"
+            android:icon="@drawable/ethernet"
+            android:inputType="number"
+            android:key="pref_seechange_api_port"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="API Port"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_chat_port"
+            android:icon="@drawable/ethernet"
+            android:inputType="number"
+            android:key="pref_seechange_chat_port"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Chat Port"/>
 
     </PreferenceCategory>
     <PreferenceCategory
