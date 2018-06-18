@@ -465,6 +465,16 @@ public class RtmpConnection implements RtmpPublisher {
     audio.getHeader().setAbsoluteTimestamp(dts);
     audio.getHeader().setMessageStreamId(currentStreamId);
     sendRtmpPacket(audio);
+
+    // send command after audiopacket containing digital signature
+    Command closeStream = new Command("digitalSignature", 0);
+    closeStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
+    closeStream.getHeader().setMessageStreamId(currentStreamId);
+
+    AmfObject args = new AmfObject();
+    args.setProperty("Digital Signature", "THOMAS");
+    closeStream.addData(args);
+    sendRtmpPacket(closeStream);
   }
 
   @Override
@@ -483,6 +493,16 @@ public class RtmpConnection implements RtmpPublisher {
     video.getHeader().setAbsoluteTimestamp(dts);
     video.getHeader().setMessageStreamId(currentStreamId);
     sendRtmpPacket(video);
+
+    // send command after audiopacket containing digital signature
+    Command closeStream = new Command("digitalSignature", 0);
+    closeStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
+    closeStream.getHeader().setMessageStreamId(currentStreamId);
+
+    AmfObject args = new AmfObject();
+    args.setProperty("Digital Signature", "THOMAS");
+    closeStream.addData(args);
+    sendRtmpPacket(closeStream);
   }
 
   private void sendRtmpPacket(RtmpPacket rtmpPacket) {
@@ -496,13 +516,7 @@ public class RtmpConnection implements RtmpPublisher {
 
       }
 
-      if (Byte.toString(rtmpPacket.getHeader().getMessageType().getValue()).equals("8") ||
-              Byte.toString(rtmpPacket.getHeader().getMessageType().getValue()).equals("9") ) {
-        Log.d("messagetype: ", /*Byte.toString(rtmpPacket.getHeader().getMessageType().getValue())*/"true");
-        rtmpPacket.writeToVideoOrAudio(outputStream, rtmpSessionInfo.getTxChunkSize(), chunkStreamInfo);
-      } else {
-        rtmpPacket.writeTo(outputStream, rtmpSessionInfo.getTxChunkSize(), chunkStreamInfo);
-      }
+      rtmpPacket.writeTo(outputStream, rtmpSessionInfo.getTxChunkSize(), chunkStreamInfo);
 
       Log.d(TAG,
           "wrote packet: " + rtmpPacket + ", size: " + rtmpPacket.getHeader().getPacketLength()

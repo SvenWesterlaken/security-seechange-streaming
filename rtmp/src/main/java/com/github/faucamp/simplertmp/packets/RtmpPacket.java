@@ -39,33 +39,7 @@ public abstract class RtmpPacket {
     byte[] body = this instanceof ContentData ? array() : baos.toByteArray();
     int length = this instanceof ContentData ? size() : body.length;
     header.setPacketLength(length);
-    //TODO check test header
-    header.setDigitalSignature("HOOII");
-    // Write header for first chunk
-    header.writeTo(out, RtmpHeader.ChunkType.TYPE_0_FULL, chunkStreamInfo);
-    int pos = 0;
-    while (length > chunkSize) {
-      // Write packet for chunk
-      out.write(body, pos, chunkSize);
-      length -= chunkSize;
-      pos += chunkSize;
-      // Write header for remain chunk
-      header.writeTo(out, RtmpHeader.ChunkType.TYPE_3_RELATIVE_SINGLE_BYTE, chunkStreamInfo);
-    }
-    String string = "HOOII";
-    byte[] b = string.getBytes("UTF-8");
-    out.write(body, pos, length);
-  }
 
-  public void writeToVideoOrAudio(OutputStream out, final int chunkSize, final ChunkStreamInfo chunkStreamInfo)
-          throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    writeBody(baos);
-    byte[] body = this instanceof ContentData ? array() : baos.toByteArray();
-    int length = this instanceof ContentData ? size() : body.length;
-    header.setPacketLength(length);
-    //TODO check test header
-    header.setDigitalSignature("HOOII");
     // Write header for first chunk
     header.writeTo(out, RtmpHeader.ChunkType.TYPE_0_FULL, chunkStreamInfo);
     int pos = 0;
@@ -77,9 +51,6 @@ public abstract class RtmpPacket {
       // Write header for remain chunk
       header.writeTo(out, RtmpHeader.ChunkType.TYPE_3_RELATIVE_SINGLE_BYTE, chunkStreamInfo);
     }
-    String string = "THOMAS";
-    byte[] b = string.getBytes("UTF-8");
     out.write(body, pos, length);
-    out.write(b);
   }
 }

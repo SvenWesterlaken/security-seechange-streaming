@@ -301,6 +301,7 @@ public class RtmpHeader {
 
   public void writeTo(OutputStream out, ChunkType chunkType, final ChunkStreamInfo chunkStreamInfo)
       throws IOException {
+
     // Write basic header byte
     out.write(((byte) (chunkType.getValue() << 6) | chunkStreamId));
     switch (chunkType) {
@@ -316,16 +317,9 @@ public class RtmpHeader {
           Util.writeUnsignedInt32(out, extendedTimestamp);
         }
 
-//        Log.d("Message type: ", Byte.toString(messageType.value));
-//
-//        if (Byte.toString(messageType.value).contains("8") ||
-//                Byte.toString(messageType.value).contains("9")) {
-//          String delimiter1 = "___";
-//          String delimiter2 = "---";
-//          out.write(delimiter1.getBytes("UTF-8"));
-//          out.write(digitalSignature.getBytes("UTF-8"));
-//          out.write(delimiter2.getBytes("UTF-8"));
-//        }
+        Log.d("Message type: ", Byte.toString(messageType.value));
+
+
         //TODO set digital signature as byte array in header
 
         break;
