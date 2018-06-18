@@ -16,6 +16,11 @@ public class LoginResponse {
 	
 	public String getToken(){return token;}
 	
+	@SerializedName("realToken")
+	public String realToken;
+	
+	public String getRealToken(){return realToken;}
+	
 	@SerializedName("privateKey")
 	public String privateKey;
 	
