@@ -29,8 +29,12 @@ class StreamingActivity : BaseActivity(), View.OnFocusChangeListener {
         } else {
             super.onBackPressed()
         }
+    fun checkSession(){
+        val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
+        preferences.getString("token", null);
 
     }
+        loginViewModel.checkToken(preferences.getString("token", null), preferences.getString("username", null))
 
     fun settingsButtonClick(btn: View?) {
         val intent = Intent(this, SettingsActivity::class.java)

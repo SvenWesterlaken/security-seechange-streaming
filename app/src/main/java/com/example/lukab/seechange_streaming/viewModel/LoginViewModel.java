@@ -19,6 +19,8 @@ import javax.crypto.spec.SecretKeySpec;
 import com.example.lukab.seechange_streaming.data.network.LoginClient;
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
 import com.example.lukab.seechange_streaming.service.model.LoginResponse;
+import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
+import com.example.lukab.seechange_streaming.service.model.UserResponse;
 
 
 import org.json.JSONException;
@@ -52,6 +54,7 @@ public class LoginViewModel extends AndroidViewModel {
 	private ServiceGenerator serviceGenerator;
 	
 	
+	String newToken;
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
@@ -90,16 +93,18 @@ public class LoginViewModel extends AndroidViewModel {
 					if (response.isSuccessful()) {
 						
 						try {
+							
 							SharedPreferences preferences = getApplication().getSharedPreferences("user", Context.MODE_PRIVATE);
-							preferences.edit().putString("username", username);
-							preferences.edit().putString("token", decryptToken(response.body().getToken(), response.body().getPublicKey()));
-							preferences.edit().putString("private_key", decryptPrivateKey(password, response.body().getPrivateKey()));
-							preferences.edit().commit();
+							preferences.edit().clear().apply();
+							preferences.edit().putString("username", username).apply();
+							preferences.edit().putString("token", decryptToken(response.body().getToken(), response.body().getPublicKey())).apply();
+							preferences.edit().putString("private_key", decryptPrivateKey(password, response.body().getPrivateKey())).apply();
 							
+							newToken = response.body().getRealToken();
 							//ToDo: delete logs
-							Log.d("e", decryptPrivateKey(password, response.body().getPrivateKey()));
-							Log.d("e", decryptToken(response.body().getToken(), response.body().getPublicKey()));
-							
+							Log.d("e", preferences.getString("token", null));
+							Log.d("e", response.body().getRealToken());
+							Log.d("e",  decryptPrivateKey(password, response.body().getPrivateKey()));
 							loggedIn.setValue(true);
 						} catch (Exception e) {
 							Log.e("error", e.toString());
@@ -139,6 +144,43 @@ public class LoginViewModel extends AndroidViewModel {
 			return pubKey;
 		}
 		
+	public LiveData<Boolean> checkToken(String token, String username){
+		LoginClient loginService =
+				ServiceGenerator.createService(LoginClient.class, token);
+	
+		final MutableLiveData<Boolean> loggedIn = new MutableLiveData<>();
+			
+			Call<UserResponse> call = loginService.getUser(username);
+			call.enqueue(new Callback<UserResponse>() {
+				@Override
+				public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
+					if (response.isSuccessful()) {
+						
+						try {
+							Log.e("tokenSuccesful", response.message());
+						
+						} catch (Exception e) {
+							Log.e("error", e.toString());
+						}
+						
+						
+					} else {
+						Log.d("error", response.message());
+						loggedIn.setValue(false);
+					}
+				}
+				
+				@Override
+				public void onFailure(Call<UserResponse> call, Throwable t) {
+					Log.d("error", t.getMessage());
+					loggedIn.setValue(false);
+				}});
+		
+		
+		return loggedIn;
+		
+		
+	}
 	
 	public String decryptToken(String tokenToDecrypt, String publicKey) throws Exception {
 		tokenToDecrypt = tokenToDecrypt.replace("[", "").replace("]", "");
