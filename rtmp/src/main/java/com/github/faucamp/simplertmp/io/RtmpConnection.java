@@ -200,8 +200,6 @@ public class RtmpConnection implements RtmpPublisher {
       args.setProperty("videoFunction", 1);
       args.setProperty("pageUrl", pageUrl);
       args.setProperty("objectEncoding", 0);
-      //TODO amf property digital signature
-//      args.setProperty("digitalSignature", "Dit is de body");
       invoke.addData(args);
       sendRtmpPacket(invoke);
     }
@@ -469,7 +467,7 @@ public class RtmpConnection implements RtmpPublisher {
     audio.setData(data, size);
     audio.getHeader().setAbsoluteTimestamp(dts);
     audio.getHeader().setMessageStreamId(currentStreamId);
-    sendRtmpPacket(audio);
+//    sendRtmpPacket(audio);
 
     // send command after audiopacket containing digital signature
     Command digitalSignatureStream = new Command("digitalSignature", 0);
@@ -478,6 +476,7 @@ public class RtmpConnection implements RtmpPublisher {
 
     byte[] audioData = audio.array();
     String hashedData = Security.HashData(audioData);
+
 
     AmfObject args = new AmfObject();
     args.setProperty("DigitalSignature", hashedData);

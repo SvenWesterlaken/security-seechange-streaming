@@ -2,8 +2,12 @@ package net.ossrs.rtmp;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.interfaces.RSAPrivateKey;
 
 public class Security {
+    private static PrivateKey privateKey;
+
     private static String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder();
         for (byte aHash : hash) {
@@ -25,6 +29,14 @@ public class Security {
             e.printStackTrace();
         }
         return hexString;
+    }
+
+    public static void setPrivateKey(PrivateKey privateKey) {
+        Security.privateKey = privateKey;
+    }
+
+    public static PrivateKey getPrivateKey() {
+        return Security.privateKey;
     }
 
 }

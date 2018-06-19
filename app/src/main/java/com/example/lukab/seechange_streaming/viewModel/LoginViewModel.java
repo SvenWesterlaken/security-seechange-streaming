@@ -33,9 +33,11 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
@@ -123,7 +125,7 @@ public class LoginViewModel extends AndroidViewModel {
 		
 	}
 	
-	public  static RSAPublicKey getPublicKeyFromString(String publicKey)
+	public static RSAPublicKey getPublicKeyFromString(String publicKey)
 		throws GeneralSecurityException {
 			String publicKeyPEM = publicKey;
 			
@@ -136,16 +138,16 @@ public class LoginViewModel extends AndroidViewModel {
 			return pubKey;
 		}
 	
-	public  static RSAPrivateKey getPrivateKeyFromString(String privateKey)
+	public  static PrivateKey getPrivateKeyFromString(String privateKey)
 			throws GeneralSecurityException {
 		String privateKeyPEM = privateKey;
 		
 		privateKeyPEM = privateKeyPEM.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
 		
-		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
+		byte[] encoded = Base64.decode(privateKeyPEM, Base64.DEFAULT);
 		
 		KeyFactory kf = KeyFactory.getInstance("RSA");
-		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(new X509EncodedKeySpec(encoded));
+		PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(encoded));
 		return privKey;
 	}
 		

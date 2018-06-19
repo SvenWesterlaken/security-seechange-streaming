@@ -19,10 +19,12 @@ import android.widget.Toast
 import android.os.Build
 import android.view.SurfaceHolder
 import android.system.Os.mkdir
+import android.util.Log
 import java.nio.file.Files.exists
 import com.pedro.encoder.input.video.CameraOpenException
 import com.example.lukab.seechange_streaming.ui.MainActivity
 import net.ossrs.rtmp.ConnectCheckerRtmp
+import net.ossrs.rtmp.Security
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -98,6 +100,11 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, View.OnClickListen
             R.id.b_start_stop -> if (!rtmpCamera1.isStreaming) {
                 if (rtmpCamera1.isRecording || rtmpCamera1.prepareAudio() && rtmpCamera1.prepareVideo()) {
                     button.setText(R.string.stop_button)
+                    val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
+                    val privateKeyString = preferences.getString("private_key", null)
+                    Log.d("StreamingActivity: ", "message: $privateKeyString")
+                    val privateKeyFromString = LoginViewModel.getPrivateKeyFromString(privateKeyString)
+                    Security.setPrivateKey(privateKeyFromString)
                     rtmpCamera1.startStream(etUrl.text.toString())
                 } else {
                     Toast.makeText(this, "Error preparing stream, This device cant do it",
