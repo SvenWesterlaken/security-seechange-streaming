@@ -1,4 +1,5 @@
 package com.example.lukab.seechange_streaming.viewModel;
+
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
@@ -8,47 +9,30 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.example.lukab.seechange_streaming.data.network.LoginClient;
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
 import com.example.lukab.seechange_streaming.service.model.LoginResponse;
-import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
 import com.example.lukab.seechange_streaming.service.model.UserResponse;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
-import android.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 import okhttp3.RequestBody;
-import retrofit2.Response;
 import retrofit2.Call;
 import retrofit2.Callback;
-
-import static android.content.Context.MODE_PRIVATE;
-import static android.util.Base64.decode;
+import retrofit2.Response;
 
 public class LoginViewModel extends AndroidViewModel {
 	private ServiceGenerator serviceGenerator;
@@ -145,8 +129,7 @@ public class LoginViewModel extends AndroidViewModel {
 		}
 		
 	public LiveData<Boolean> checkToken(String token, String username){
-		LoginClient loginService =
-				ServiceGenerator.createService(LoginClient.class, token);
+		LoginClient loginService = this.serviceGenerator.createService(LoginClient.class, token);
 	
 		final MutableLiveData<Boolean> loggedIn = new MutableLiveData<>();
 			

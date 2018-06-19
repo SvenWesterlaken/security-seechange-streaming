@@ -123,7 +123,7 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
         val milliseconds = sharedPreferences.getLong(key, 0)
         val dateFormat = SimpleDateFormat("MMMM d yyyy, HH:mm", Locale.US)
 
-        return if (milliseconds < 2) {
+        return if (milliseconds < 1) {
             "No avatar set"
         } else {
             "Last Modified: ${dateFormat.format(Date(milliseconds))}"

@@ -92,9 +92,8 @@ class UserSettingsViewModel(application: Application, private val username: Stri
     fun uploadAvatar(image: File): LiveData<Boolean> {
         val succeeded: MutableLiveData<Boolean> = MutableLiveData()
         val filePart = MultipartBody.Part.createFormData("avatar", image.name, RequestBody.create(MediaType.parse("image/*"), image))
-        val username = RequestBody.create(okhttp3.MediaType.parse("text"), this.username)
 
-        settingsClient.updateAvatar(filePart, username).enqueue(object: Callback<SeeChangeApiResponse> {
+        settingsClient.updateAvatar(filePart, this.username).enqueue(object: Callback<SeeChangeApiResponse> {
             override fun onResponse(call: Call<SeeChangeApiResponse>, response: Response<SeeChangeApiResponse>) {
                 succeeded.value = response.isSuccessful
             }
