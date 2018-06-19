@@ -4,6 +4,7 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.content.Context
 import android.preference.PreferenceManager
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator
 import com.example.lukab.seechange_streaming.data.network.clients.UserSettingsClient
@@ -27,8 +28,9 @@ class UserSettingsViewModel(application: Application, private val username: Stri
     init {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.applicationContext)
         this.url = "http://${sharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${sharedPreferences.getString("pref_seechange_api_port", "8081")}"
+        val token = application.getSharedPreferences("user", Context.MODE_PRIVATE).getString("token", null)
         this.serviceGenerator = ServiceGenerator(url)
-        this.settingsClient = this.serviceGenerator.createService(UserSettingsClient::class.java)
+        this.settingsClient = this.serviceGenerator.createService(UserSettingsClient::class.java, token)
     }
 
     fun updatePublicName(name: String): LiveData<Boolean> {
