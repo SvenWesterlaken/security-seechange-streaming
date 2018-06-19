@@ -4,6 +4,7 @@ import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LifecycleRegistry
 import android.arch.lifecycle.Observer
+import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.preference.Preference
@@ -26,7 +27,8 @@ class SettingsFragment : PreferenceFragment(), LifecycleOwner, SharedPreferences
         addPreferencesFromResource(R.xml.preferences)
         this.lifeCycleRegistry = LifecycleRegistry(this)
         this.lifeCycleRegistry.markState(Lifecycle.State.CREATED)
-        this.userSettingsViewModel = UserSettingsViewModel(activity.application, "svenwesterlaken")
+        val username = activity.application.getSharedPreferences("user", Context.MODE_PRIVATE).getString("username", "unknown")
+        this.userSettingsViewModel = UserSettingsViewModel(activity.application, username)
         this.sharedPreferences = preferenceManager.sharedPreferences
         initSummary()
     }
