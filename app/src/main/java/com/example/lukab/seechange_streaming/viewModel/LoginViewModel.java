@@ -6,6 +6,7 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -24,6 +25,7 @@ import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
@@ -35,24 +37,24 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginViewModel extends AndroidViewModel {
+	private ServiceGenerator serviceGenerator;
 	
 	
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
+		String url = "http://" + sharedPreferences.getString("pref_seechange_ip", "10.0.2.2") + ":" + sharedPreferences.getInt("pref_stream_user_api_port", 3000);
+		this.serviceGenerator = new ServiceGenerator(url);
 	}
 	
 	public boolean isUsernameAndPasswordValid(String username, String password) {
 		
-		if (TextUtils.isEmpty(username)) {
-			return false;
-		}
-		return !TextUtils.isEmpty(password);
+		return !TextUtils.isEmpty(username) && !TextUtils.isEmpty(password);
 	}
 	
 	public LiveData<Boolean> login(final String username, final String password) {
 		
-		LoginClient loginService =
-				ServiceGenerator.createService(LoginClient.class);
+		LoginClient loginService = this.serviceGenerator.createService(LoginClient.class);
 		JSONObject paramObject = new JSONObject();
 		RequestBody body;
 		final MutableLiveData<Boolean> loggedIn = new MutableLiveData<>();
@@ -77,9 +79,6 @@ public class LoginViewModel extends AndroidViewModel {
 							preferences.edit().putString("token", response.body().getToken()).apply();
 							preferences.edit().putString("private_key", decryptPrivateKey(password, response.body().getPrivateKey())).apply();
 							
-							//ToDo: delete logs
-							Log.d("e", preferences.getString("token", null));
-							Log.d("e",  decryptPrivateKey(password, response.body().getPrivateKey()));
 							loggedIn.setValue(true);
 						} catch (Exception e) {
 							Log.e("error", e.toString());
@@ -126,15 +125,14 @@ public class LoginViewModel extends AndroidViewModel {
 		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
 		
 		KeyFactory kf = KeyFactory.getInstance("RSA");
-		return (RSAPrivateKey) kf.generatePrivate(new X509EncodedKeySpec(encoded));
+		return (RSAPrivateKey) kf.generatePrivate(new PKCS8EncodedKeySpec(encoded));
 	}
 		
 
 	
 		
 	public LiveData<Boolean> checkToken(String token, String username){
-		LoginClient loginService =
-				ServiceGenerator.createService(LoginClient.class);
+		LoginClient loginService =  serviceGenerator.createService(LoginClient.class);
 		JSONObject paramObject = new JSONObject();
 		RequestBody body;
 		final MutableLiveData<Boolean> validToken = new MutableLiveData<>();

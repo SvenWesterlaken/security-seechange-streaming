@@ -6,12 +6,27 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorIcons">@color/colorSecondary</item>
         <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="android:listDivider">@null</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="ToolBarStyle" parent="Theme.AppCompat">
+        <item name="android:textColorPrimary">@color/colorSecondary</item>
+        <item name="android:textColorSecondary">@color/colorSecondary</item>
+        <item name="actionMenuTextColor">@color/colorSecondary</item>
+    </style>
+
+    <style name="TextAppearanceSettingsCategory" parent="TextAppearance.AppCompat">
+        <item name="fontPath">fonts/Roboto-Medium.ttf</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/colorSecondary</item>
     </style>
 
 </resources>
