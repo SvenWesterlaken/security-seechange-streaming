@@ -1,10 +1,7 @@
 package com.example.lukab.seechange_streaming.data.network;
 
-import android.app.Application;
 import android.content.Context;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Base64;
 
 import com.example.lukab.seechange_streaming.R;
 
@@ -17,10 +14,8 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 
@@ -40,7 +35,6 @@ public class ServiceGenerator {
     private static Retrofit retrofit = builder.build();
     
     public static <S> S createService(Class<S> serviceClass) {
-        //return createService(serviceClass, null, null);
         return retrofit.create(serviceClass);
     }
     

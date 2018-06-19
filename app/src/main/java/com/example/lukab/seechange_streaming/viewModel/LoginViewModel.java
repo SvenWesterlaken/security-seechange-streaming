@@ -1,4 +1,5 @@
 package com.example.lukab.seechange_streaming.viewModel;
+
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
@@ -7,47 +8,31 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.example.lukab.seechange_streaming.data.network.LoginClient;
-import com.example.lukab.seechange_streaming.service.model.LoginResponse;
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
+import com.example.lukab.seechange_streaming.service.model.LoginResponse;
 import com.example.lukab.seechange_streaming.service.model.UserResponse;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
-import android.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 import okhttp3.RequestBody;
-import retrofit2.Response;
 import retrofit2.Call;
 import retrofit2.Callback;
-
-import static android.content.Context.MODE_PRIVATE;
-import static android.util.Base64.decode;
+import retrofit2.Response;
 
 public class LoginViewModel extends AndroidViewModel {
 	
@@ -61,10 +46,7 @@ public class LoginViewModel extends AndroidViewModel {
 		if (TextUtils.isEmpty(username)) {
 			return false;
 		}
-		if (TextUtils.isEmpty(password)) {
-			return false;
-		}
-		return true;
+		return !TextUtils.isEmpty(password);
 	}
 	
 	public LiveData<Boolean> login(final String username, final String password) {
@@ -132,8 +114,7 @@ public class LoginViewModel extends AndroidViewModel {
 			byte[] encoded = Base64.decode(publicKeyPEM, Base64.NO_PADDING);
 			
 			KeyFactory kf = KeyFactory.getInstance("RSA");
-			RSAPublicKey pubKey = (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
-			return pubKey;
+			return (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
 		}
 	
 	public  static RSAPrivateKey getPrivateKeyFromString(String privateKey)
@@ -145,8 +126,7 @@ public class LoginViewModel extends AndroidViewModel {
 		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
 		
 		KeyFactory kf = KeyFactory.getInstance("RSA");
-		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(new X509EncodedKeySpec(encoded));
-		return privKey;
+		return (RSAPrivateKey) kf.generatePrivate(new X509EncodedKeySpec(encoded));
 	}
 		
 
@@ -154,38 +134,44 @@ public class LoginViewModel extends AndroidViewModel {
 		
 	public LiveData<Boolean> checkToken(String token, String username){
 		LoginClient loginService =
-				ServiceGenerator.createService(LoginClient.class, token);
-	
-		final MutableLiveData<Boolean> loggedIn = new MutableLiveData<>();
+				ServiceGenerator.createService(LoginClient.class);
+		JSONObject paramObject = new JSONObject();
+		RequestBody body;
+		final MutableLiveData<Boolean> validToken = new MutableLiveData<>();
+		
+		try {
+			paramObject.put("token", token);
+			body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), (paramObject).toString());
 			
-			Call<UserResponse> call = loginService.getUser(username);
+			Call<UserResponse> call = loginService.verifyToken(username, body);
 			call.enqueue(new Callback<UserResponse>() {
 				@Override
 				public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
 					if (response.isSuccessful()) {
 						
 						try {
-							Log.e("tokenSuccesful", response.message());
-						
+							validToken.setValue(true);
 						} catch (Exception e) {
 							Log.e("error", e.toString());
 						}
 						
-						
 					} else {
 						Log.d("error", response.message());
-						loggedIn.setValue(false);
+						validToken.setValue(false);
 					}
 				}
 				
 				@Override
 				public void onFailure(Call<UserResponse> call, Throwable t) {
 					Log.d("error", t.getMessage());
-					loggedIn.setValue(false);
-				}});
+					validToken.setValue(false);
+				}
+			});
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		
-		
-		return loggedIn;
+		return validToken;
 		
 		
 	}

@@ -1,8 +1,8 @@
 package com.example.lukab.seechange_streaming.ui.activities
 
-import android.app.Application
+import android.arch.lifecycle.Observer
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import com.example.lukab.seechange_streaming.R
 import com.example.lukab.seechange_streaming.viewModel.LoginViewModel
@@ -17,15 +17,18 @@ class StreamingActivity : BaseActivity() {
         setContentView(R.layout.activity_streaming)
 
         loginViewModel = LoginViewModel(this.application);
-       // checkSession()
+        checkSession()
     }
 
-    fun checkSession(){
+    private fun checkSession(){
         val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
-        preferences.getString("token", null);
 
-        loginViewModel.checkToken(preferences.getString("token", null), preferences.getString("username", null))
-
+        loginViewModel.checkToken(preferences.getString("token", null), preferences.getString("username",null)).observe(this, Observer<Boolean> { validToken ->
+            if (validToken == false) {
+                val intent = Intent(applicationContext, LoginActivity::class.java);
+                startActivity(intent)
+                finish()
+            }
+        })
     }
-
 }
