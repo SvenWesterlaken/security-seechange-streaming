@@ -145,7 +145,7 @@ public class LoginViewModel extends AndroidViewModel {
 		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
 		
 		KeyFactory kf = KeyFactory.getInstance("RSA");
-		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
+		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(new X509EncodedKeySpec(encoded));
 		return privKey;
 	}
 		
