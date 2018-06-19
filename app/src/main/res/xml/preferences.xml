@@ -26,16 +26,29 @@
             android:selectAllOnFocus="true"
             android:title="Slogan"/>
 
+        <Preference
+            android:defaultValue="@string/unknown_value"
+            android:icon="@drawable/account_circle"
+            android:key="pref_avatar"
+            android:layout="@layout/row_preference"
+            android:title="Avatar">
+
+            <intent
+                android:targetPackage="com.example.lukab.seechange_streaming"
+                android:targetClass="com.example.lukab.seechange_streaming.ui.activities.AvatarActivity"/>
+
+        </Preference>
+
     </PreferenceCategory>
     <PreferenceCategory
-        android:title="Chat Developer Settings"
+        android:title="SeeChange Server Developer Settings"
         android:layout="@layout/row_preference_category">
 
         <EditTextPreference
             android:defaultValue="127.0.0.1"
             android:icon="@drawable/access_point_network"
             android:inputType="text"
-            android:key="pref_chat_ip"
+            android:key="pref_seechange_ip"
             android:layout="@layout/row_preference"
             android:maxLines="1"
             android:selectAllOnFocus="true"
@@ -43,26 +56,48 @@
             android:title="IP Address"/>
 
         <EditTextPreference
-            android:defaultValue="@string/default_chat_port"
+            android:defaultValue="@string/default_stream_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
-            android:key="pref_chat_port"
+            android:key="pref_seechange_stream_port"
             android:layout="@layout/row_preference"
             android:maxLines="1"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="Port"/>
+            android:title="Stream Port"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_api_port"
+            android:icon="@drawable/ethernet"
+            android:inputType="number"
+            android:key="pref_seechange_api_port"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="API Port"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_chat_port"
+            android:icon="@drawable/ethernet"
+            android:inputType="number"
+            android:key="pref_seechange_chat_port"
+            android:layout="@layout/row_preference"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Chat Port"/>
 
     </PreferenceCategory>
     <PreferenceCategory
-        android:title="Stream Developer Settings"
+        android:title="TruYou Server Developer Settings"
         android:layout="@layout/row_preference_category">
 
         <EditTextPreference
             android:defaultValue="@string/unknown_value"
             android:icon="@drawable/access_point_network"
             android:inputType="text"
-            android:key="pref_stream_ip"
+            android:key="pref_truyou_ip"
             android:layout="@layout/row_preference"
             android:maxLines="1"
             android:selectAllOnFocus="true"
