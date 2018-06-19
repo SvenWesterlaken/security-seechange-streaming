@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+project.ext {
+    rxJavaVersion = "2.1.0"
+    rxAndroidVersion = "2.0.1"
+    lifecycleVersion = "1.0.0-alpha3"
+    daggerVersion = "2.11"
+}
 android {
     compileSdkVersion 27
     buildToolsVersion "26.0.3"
@@ -22,10 +28,41 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
     implementation 'com.android.support:design:27.1.1'
+
+    compile project(':rtplibrary')
+
+    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    compile project(':rtplibrary')
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
+    compile 'uk.co.chrisjenx:calligraphy:2.3.0'
+
+    // Dagger core
+    annotationProcessor "com.google.dagger:dagger-compiler:$project.daggerVersion"
+    compile "com.google.dagger:dagger:$project.daggerVersion"
+
+    // Dagger Android
+    annotationProcessor "com.google.dagger:dagger-android-processor:$project.daggerVersion"
+    compile "com.google.dagger:dagger-android-support:$project.daggerVersion"
+    // if you are not using support library, include this instead
+    compile "com.google.dagger:dagger-android:$project.daggerVersion"
+
+
+    // LifeCycle
+    compile "android.arch.lifecycle:runtime:1.1.0"
+    compile "android.arch.lifecycle:extensions:1.1.0"
+    annotationProcessor "android.arch.lifecycle:compiler:1.1.0"
+
+    // Retrofit & OkHttp
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
 }
+
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
