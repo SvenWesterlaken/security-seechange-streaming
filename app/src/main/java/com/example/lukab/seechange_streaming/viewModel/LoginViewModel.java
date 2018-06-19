@@ -23,6 +23,8 @@ import org.json.JSONObject;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -38,7 +40,6 @@ public class LoginViewModel extends AndroidViewModel {
 	private ServiceGenerator serviceGenerator;
 	
 	
-	String newToken;
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
@@ -81,19 +82,16 @@ public class LoginViewModel extends AndroidViewModel {
 							SharedPreferences preferences = getApplication().getSharedPreferences("user", Context.MODE_PRIVATE);
 							preferences.edit().clear().apply();
 							preferences.edit().putString("username", username).apply();
-							preferences.edit().putString("token", decryptToken(response.body().getToken(), response.body().getPublicKey())).apply();
+							preferences.edit().putString("token", response.body().getToken()).apply();
 							preferences.edit().putString("private_key", decryptPrivateKey(password, response.body().getPrivateKey())).apply();
 							
-							newToken = response.body().getRealToken();
 							//ToDo: delete logs
 							Log.d("e", preferences.getString("token", null));
-							Log.d("e", response.body().getRealToken());
 							Log.d("e",  decryptPrivateKey(password, response.body().getPrivateKey()));
 							loggedIn.setValue(true);
 						} catch (Exception e) {
 							Log.e("error", e.toString());
 						}
-						
 						
 					} else {
 						Log.d("error", "error");
@@ -127,6 +125,22 @@ public class LoginViewModel extends AndroidViewModel {
 			RSAPublicKey pubKey = (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
 			return pubKey;
 		}
+	
+	public  static RSAPrivateKey getPrivateKeyFromString(String privateKey)
+			throws GeneralSecurityException {
+		String privateKeyPEM = privateKey;
+		
+		privateKeyPEM = privateKeyPEM.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
+		
+		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
+		
+		KeyFactory kf = KeyFactory.getInstance("RSA");
+		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
+		return privKey;
+	}
+		
+
+	
 		
 	public LiveData<Boolean> checkToken(String token, String username){
 		LoginClient loginService = this.serviceGenerator.createService(LoginClient.class, token);
@@ -164,15 +178,6 @@ public class LoginViewModel extends AndroidViewModel {
 		
 		
 	}
-	
-	public String decryptToken(String tokenToDecrypt, String publicKey) throws Exception {
-		tokenToDecrypt = tokenToDecrypt.replace("[", "").replace("]", "");
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.DECRYPT_MODE, getPublicKeyFromString(publicKey));
-		byte[] clearbyte = cipher.doFinal(Base64.decode(tokenToDecrypt, Base64.NO_PADDING));
-		return new String(clearbyte);
-	}
-	
 	
 	private static String decryptPrivateKey(String password, String encrypted) throws Exception {
 		byte[] key = password.getBytes();
