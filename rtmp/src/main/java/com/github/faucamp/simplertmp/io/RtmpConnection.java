@@ -472,7 +472,7 @@ public class RtmpConnection implements RtmpPublisher {
     closeStream.getHeader().setMessageStreamId(currentStreamId);
 
     AmfObject args = new AmfObject();
-    args.setProperty("Digital Signature", "THOMAS");
+    args.setProperty("DigitalSignature", "THOMAS");
     closeStream.addData(args);
     sendRtmpPacket(closeStream);
   }
@@ -499,8 +499,10 @@ public class RtmpConnection implements RtmpPublisher {
     closeStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
     closeStream.getHeader().setMessageStreamId(currentStreamId);
 
+    byte[] videoData = video.array();
+
     AmfObject args = new AmfObject();
-    args.setProperty("Digital Signature", "THOMAS");
+    args.setProperty("DigitalSignature", "THOMAS");
     closeStream.addData(args);
     sendRtmpPacket(closeStream);
   }
