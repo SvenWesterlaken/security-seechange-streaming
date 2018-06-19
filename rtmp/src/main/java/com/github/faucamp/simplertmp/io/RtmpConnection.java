@@ -28,11 +28,16 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.ossrs.rtmp.ConnectCheckerRtmp;
 import net.ossrs.rtmp.CreateSSLSocket;
+import net.ossrs.rtmp.Security;
 
 /**
  * Main RTMP connection implementation class
@@ -467,14 +472,18 @@ public class RtmpConnection implements RtmpPublisher {
     sendRtmpPacket(audio);
 
     // send command after audiopacket containing digital signature
-    Command closeStream = new Command("digitalSignature", 0);
-    closeStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
-    closeStream.getHeader().setMessageStreamId(currentStreamId);
+    Command digitalSignatureStream = new Command("digitalSignature", 0);
+    digitalSignatureStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
+    digitalSignatureStream.getHeader().setMessageStreamId(currentStreamId);
+
+    byte[] audioData = audio.array();
+    String hashedData = Security.HashData(audioData);
 
     AmfObject args = new AmfObject();
-    args.setProperty("DigitalSignature", "THOMAS");
-    closeStream.addData(args);
-    sendRtmpPacket(closeStream);
+    args.setProperty("DigitalSignature", hashedData);
+//    args.setProperty("OriginalAudioData", new String(audioData));
+    digitalSignatureStream.addData(args);
+    sendRtmpPacket(digitalSignatureStream);
   }
 
   @Override
@@ -495,16 +504,18 @@ public class RtmpConnection implements RtmpPublisher {
     sendRtmpPacket(video);
 
     // send command after audiopacket containing digital signature
-    Command closeStream = new Command("digitalSignature", 0);
-    closeStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
-    closeStream.getHeader().setMessageStreamId(currentStreamId);
+    Command digitalSignatureStream = new Command("digitalSignature", 0);
+    digitalSignatureStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
+    digitalSignatureStream.getHeader().setMessageStreamId(currentStreamId);
 
     byte[] videoData = video.array();
+    String hashedData = Security.HashData(videoData);
 
     AmfObject args = new AmfObject();
-    args.setProperty("DigitalSignature", "THOMAS");
-    closeStream.addData(args);
-    sendRtmpPacket(closeStream);
+    args.setProperty("DigitalSignature", hashedData);
+//    args.setProperty("OriginalVideoData", new String(videoData));
+    digitalSignatureStream.addData(args);
+    sendRtmpPacket(digitalSignatureStream);
   }
 
   private void sendRtmpPacket(RtmpPacket rtmpPacket) {
