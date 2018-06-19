@@ -21,11 +21,6 @@ public interface LoginClient {
 	@POST("api/v1/login")
 	Call<LoginResponse> login(@Body RequestBody params);
 	
-	@Headers({
-			"Accept: application/json", "Content-Type: application/json"
-	})
-	@POST("api/v1/token")
-	Call<String> validateToken(@Body RequestBody params);
 	
 	@Headers({
 			"Accept: application/json", "Content-Type: application/json"
