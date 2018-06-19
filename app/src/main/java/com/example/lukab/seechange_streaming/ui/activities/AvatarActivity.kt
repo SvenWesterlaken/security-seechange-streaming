@@ -28,7 +28,7 @@ import com.karumi.dexter.listener.single.PermissionListener
 import de.hdodenhof.circleimageview.CircleImageView
 import java.io.File
 
-class AvatarActivity : AppCompatActivity(), PermissionListener {
+class AvatarActivity : BaseActivity(), PermissionListener {
     private lateinit var userSettingsViewModel: UserSettingsViewModel
     private lateinit var profilePicture: CircleImageView
     private lateinit var avatarImageUrl: String
