@@ -37,6 +37,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import net.ossrs.rtmp.ConnectCheckerRtmp
 import net.ossrs.rtmp.Security
 import org.json.JSONObject
+import java.security.PrivateKey
 import java.util.*
 
 
@@ -52,42 +53,86 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
     private lateinit var chatAdapter: RecyclerView.Adapter<MessageAdapter.ViewHolder>
     private lateinit var surfaceView: SurfaceView
 
+    private lateinit var chatUrl: String
+    private lateinit var streamUrl: String
+    private lateinit var token: String
+    private lateinit var username: String
+    private lateinit var privateKey: PrivateKey
+
     private var chatMessages: ArrayList<Message> = ArrayList()
 
     private var isFrontCamera = false
+    private val RECORD_STOP: Int = 0
+    private val RECORD_START: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_streaming)
 
-        streamingButton = findViewById(R.id.camera_button)
-
         this.panelSlider = findViewById(R.id.sliding_layout)
-        this.chatInputText = findViewById(R.id.ChatEditText)
+
+        this.initPreferences()
+        this.initLoginViewModel()
+        this.initChat()
+        this.initStream()
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Initiators
+    //
+    // ------------------------------------------------------------------------------
+
+    private fun initPreferences() {
+        val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
+
+        this.chatUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_chat_port", "3000")}"
+        this.streamUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_stream_port", "1935")}"
+
+        this.username = sharedPreferences.getString("username", null)
+        this.privateKey = loginViewModel.getPrivateKeyFromString(sharedPreferences.getString("private_key", null))
+        this.token = sharedPreferences.getString("token", null)
+
+        Security.setPrivateKey(privateKey)
+    }
+
+    private fun initLoginViewModel() {
+        this.loginViewModel = LoginViewModel(this.application)
+        checkSession()
+    }
+
+    private fun initStream() {
+        Dexter.withActivity(this).withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO).withListener(this).check()
+        this.surfaceView = findViewById(R.id.surfaceView)
         this.cameraSwitchButton = findViewById(R.id.switch_camera)
+        streamingButton = findViewById(R.id.camera_button)
+    }
+
+    private fun initChat() {
+        this.chatInputText = findViewById(R.id.ChatEditText)
         this.chatInputText.onFocusChangeListener = this
 
-        this.surfaceView = findViewById(R.id.surfaceView)
-
-        chatAdapter = MessageAdapter(this, chatMessages)
-
+        this.chatAdapter = MessageAdapter(this, chatMessages)
         this.chatView = findViewById(R.id.ChatRecyclerView)
         chatView.layoutManager = LinearLayoutManager(this)
         chatView.adapter = chatAdapter
 
-        Dexter.withActivity(this)
-                .withPermissions(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.RECORD_AUDIO
-                )
-                .withListener(this)
-                .check()
+        this.chatViewModel = ChatViewModel(streamUrl, username, privateKey)
+        this.chatViewModel.connect()
 
-        initLoginViewModel()
-        initChatViewModel()
+        this.chatViewModel.addErrorListener(errorListener)
+        this.chatViewModel.addMessageListener(newMessageListener)
+
+        this.chatViewModel.authenticate(token, authenticationListener)
     }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Permission Hooks
+    //
+    // ------------------------------------------------------------------------------
 
     override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
         this.camera = RtmpCamera1(this.surfaceView, this)
@@ -96,28 +141,11 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
 
     override fun onPermissionRationaleShouldBeShown(permissions: MutableList<PermissionRequest>?, token: PermissionToken?) {}
 
-    private fun initLoginViewModel() {
-        this.loginViewModel = LoginViewModel(this.application)
-        checkSession()
-    }
-
-    private fun initChatViewModel() {
-        val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val url = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_chat_port", "3000")}"
-
-        val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
-        val username = sharedPreferences.getString("username", null)
-        val privateKey = sharedPreferences.getString("private_key", null)
-        val token = sharedPreferences.getString("token", null)
-
-        this.chatViewModel = ChatViewModel(url, username, privateKey, application)
-        this.chatViewModel.connect()
-
-        this.chatViewModel.addErrorListener(errorListener)
-        this.chatViewModel.addMessageListener(newMessageListener)
-
-        this.chatViewModel.authenticate(token, authenticationListener)
-    }
+    // ------------------------------------------------------------------------------
+    //
+    //    Hooks
+    //
+    // ------------------------------------------------------------------------------
 
     override fun onDestroy() {
         super.onDestroy()
@@ -137,9 +165,11 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         this.panelSlider.isTouchEnabled = !isFocused
     }
 
-    fun sendMessage(v: View?) {
-        this.chatViewModel.sendMessage(chatInputText.text.toString())
-    }
+    // ------------------------------------------------------------------------------
+    //
+    //    Click Listeners
+    //
+    // ------------------------------------------------------------------------------
 
     fun settingsButtonClick(btn: View?) {
         val intent = Intent(this, SettingsActivity::class.java)
@@ -153,16 +183,118 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         }
     }
 
-    private fun checkSession() {
-        val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
+    // ------------------------------------------------------------------------------
+    //
+    //    Token Validation (Session Check)
+    //
+    // ------------------------------------------------------------------------------
 
-        loginViewModel.checkToken(preferences.getString("token", null), preferences.getString("username", null)).observe(this, Observer<Boolean> { validToken ->
+    private fun checkSession() {
+        loginViewModel.checkToken(token,username).observe(this, Observer<Boolean> { validToken ->
             if (validToken == false) {
-                val intent = Intent(applicationContext, LoginActivity::class.java);
-                startActivity(intent)
+                startActivity(Intent(applicationContext, LoginActivity::class.java))
                 finish()
             }
         })
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Streaming interactions
+    //
+    // ------------------------------------------------------------------------------
+
+    fun startStreamButtonClick(view: View?) {
+        if (!camera.isStreaming) {
+            if (camera.isRecording || camera.prepareAudio() && camera.prepareVideo()) {
+                switchRecordIcon(RECORD_START)
+                camera.startStream(streamUrl)
+            } else {
+                Toast.makeText(this, "Error preparing stream, This device can't do it", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            switchRecordIcon(RECORD_STOP)
+            camera.stopStream()
+        }
+    }
+
+    fun switchCameraClick(view: View?) {
+        try {
+            camera.switchCamera()
+            switchCameraIcon()
+        } catch (e: CameraOpenException) {
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onConnectionSuccessRtmp() {
+        runOnUiThread { Toast.makeText(this, "Connection success", Toast.LENGTH_SHORT).show() }
+    }
+
+    override fun onConnectionFailedRtmp(reason: String) {
+        runOnUiThread {
+            Toast.makeText(this, "Connection failed. $reason", Toast.LENGTH_SHORT).show()
+            switchRecordIcon(RECORD_STOP)
+            camera.stopStream()
+        }
+    }
+
+    override fun onDisconnectRtmp() {
+        runOnUiThread { Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show() }
+    }
+
+    override fun onAuthErrorRtmp() {
+        runOnUiThread { Toast.makeText(this, "Auth error", Toast.LENGTH_SHORT).show() }
+    }
+
+    override fun onAuthSuccessRtmp() {
+        runOnUiThread { Toast.makeText(this, "Auth success", Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun switchCameraIcon() {
+        if (isFrontCamera) {
+            this.cameraSwitchButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_front_variant)
+            this.isFrontCamera = false
+        } else {
+            this.cameraSwitchButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_rear_variant)
+            this.isFrontCamera = true
+        }
+    }
+
+    private fun switchRecordIcon(mode: Int) {
+        if (mode == RECORD_STOP) {
+            streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button)
+        } else if (mode == RECORD_START) {
+            streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button_active)
+        }
+    }
+
+    override fun surfaceCreated(surfaceHolder: SurfaceHolder) {}
+
+    override fun surfaceChanged(surfaceHolder: SurfaceHolder, i: Int, i1: Int, i2: Int) {
+        camera.startPreview()
+    }
+
+    override fun surfaceDestroyed(surfaceHolder: SurfaceHolder) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && camera.isRecording) {
+            camera.stopRecord()
+        }
+
+        if (camera.isStreaming) {
+            camera.stopStream()
+        }
+
+        camera.stopPreview()
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Chat interactions
+    //
+    // ------------------------------------------------------------------------------
+
+    fun sendMessage(v: View?) {
+        this.chatViewModel.sendMessage(chatInputText.text.toString())
     }
 
     private fun subscribeToChat() {
@@ -185,7 +317,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
 
     // ------------------------------------------------------------------------------
     //
-    //    Listeners for Chat (Powered by Socket.io)
+    //    Listeners for Chat
     //
     // ------------------------------------------------------------------------------
 
@@ -216,89 +348,6 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             subscribeToChat()
         }
-    }
-
-    override fun onConnectionSuccessRtmp() {
-        runOnUiThread { Toast.makeText(this, "Connection success", Toast.LENGTH_SHORT).show() }
-    }
-
-    override fun onConnectionFailedRtmp(reason: String) {
-        runOnUiThread {
-            Toast.makeText(this, "Connection failed. $reason", Toast.LENGTH_SHORT).show()
-            camera.stopStream()
-            streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button)
-        }
-    }
-
-    override fun onDisconnectRtmp() {
-        runOnUiThread { Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show() }
-    }
-
-    override fun onAuthErrorRtmp() {
-        runOnUiThread { Toast.makeText(this, "Auth error", Toast.LENGTH_SHORT).show() }
-    }
-
-    override fun onAuthSuccessRtmp() {
-        runOnUiThread { Toast.makeText(this, "Auth success", Toast.LENGTH_SHORT).show() }
-    }
-
-    fun startStreamButtonClick(view: View?) {
-        if (!camera.isStreaming) {
-            if (camera.isRecording || camera.prepareAudio() && camera.prepareVideo()) {
-                streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button_active)
-                val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
-                val privateKeyString = preferences.getString("private_key", null)
-                Log.d("StreamingActivity: ", "message: $privateKeyString")
-                val privateKeyFromString = loginViewModel.getPrivateKeyFromString(privateKeyString)
-                Security.setPrivateKey(privateKeyFromString)
-
-                val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-                val streamUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_stream_port", "1935")}"
-
-                camera.startStream(streamUrl)
-            } else {
-                Toast.makeText(this, "Error preparing stream, This device cant do it", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button)
-            camera.stopStream()
-        }
-    }
-
-    fun switchCameraClick(view: View?) {
-        try {
-            camera.switchCamera()
-
-
-            if (isFrontCamera) {
-                this.cameraSwitchButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_front_variant)
-                this.isFrontCamera = false
-            } else {
-                this.cameraSwitchButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_rear_variant)
-                this.isFrontCamera = true
-            }
-
-        } catch (e: CameraOpenException) {
-            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun surfaceCreated(surfaceHolder: SurfaceHolder) {}
-
-    override fun surfaceChanged(surfaceHolder: SurfaceHolder, i: Int, i1: Int, i2: Int) {
-        camera.startPreview()
-    }
-
-    override fun surfaceDestroyed(surfaceHolder: SurfaceHolder) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && camera.isRecording) {
-            camera.stopRecord()
-        }
-
-        if (camera.isStreaming) {
-            camera.stopStream()
-        }
-
-        camera.stopPreview()
     }
 
 }
