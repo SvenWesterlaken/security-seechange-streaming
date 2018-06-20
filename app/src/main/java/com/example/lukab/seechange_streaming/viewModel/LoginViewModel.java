@@ -11,7 +11,17 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Base64;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
+import javax.crypto.*;
+
+import com.example.lukab.seechange_streaming.app.utils.Asn1Object;
+import com.example.lukab.seechange_streaming.app.utils.DerParser;
 import com.example.lukab.seechange_streaming.data.network.LoginClient;
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
 import com.example.lukab.seechange_streaming.service.model.LoginResponse;
@@ -20,6 +30,8 @@ import com.example.lukab.seechange_streaming.service.model.UserResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -93,7 +105,7 @@ public class LoginViewModel extends AndroidViewModel {
 				
 				@Override
 				public void onFailure(Call<LoginResponse> call, Throwable t) {
-					Log.d("error", t.getMessage());
+					Log.d("error", "message: " + t.getMessage());
 					loggedIn.setValue(false);
 				}
 			});
@@ -117,23 +129,33 @@ public class LoginViewModel extends AndroidViewModel {
 			return (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
 		}
 	
-	public  static PrivateKey getPrivateKeyFromString(String privateKey)
+	public PrivateKey getPrivateKeyFromString(String privateKey)
 			throws GeneralSecurityException {
 		String privateKeyPEM = privateKey;
 		
-		privateKeyPEM = privateKeyPEM.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
+		privateKeyPEM = privateKeyPEM.replaceAll("\\n", "")
+				.replace("-----BEGIN RSA PRIVATE KEY-----", "")
+				.replace("-----END RSA PRIVATE KEY-----", "");
+		Log.d("LoginViewModel: ", "privatePem without begin and end: " + privateKeyPEM);
 		
 		byte[] encoded = Base64.decode(privateKeyPEM, Base64.DEFAULT);
-		
-		KeyFactory kf = KeyFactory.getInstance("RSA");
 
-		PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(encoded));
-		return privKey;
+//		PKCS8EncodedKeySpec keySpecPKCS8 = new EncodedKeySpec();
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+		RSAPrivateCrtKeySpec rsaKeySpec = null;
 
+		try {
+			rsaKeySpec = getRSAKeySpec(encoded);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (rsaKeySpec != null) {
+			PrivateKey privKey = kf.generatePrivate(rsaKeySpec);
+			return privKey;
+		} else {
+			return null;
+		}
 	}
-		
-
-	
 		
 	public LiveData<Boolean> checkToken(String token, String username){
 		LoginClient loginService =  serviceGenerator.createService(LoginClient.class);
@@ -195,6 +217,34 @@ public class LoginViewModel extends AndroidViewModel {
 		for (int i = 0; i < len; i++)
 			result[i] = Integer.valueOf(hexString.substring(2 * i, 2 * i + 2), 16).byteValue();
 		return result;
+	}
+
+	public RSAPrivateCrtKeySpec getRSAKeySpec(byte[] keyBytes) throws IOException {
+
+		DerParser parser = new DerParser(keyBytes);
+
+		Asn1Object sequence = parser.read();
+		if (sequence.getType() != DerParser.SEQUENCE)
+			throw new IOException("Invalid DER: not a sequence"); //$NON-NLS-1$
+
+		// Parse inside the sequence
+		parser = sequence.getParser();
+
+		parser.read(); // Skip version
+		BigInteger modulus = parser.read().getInteger();
+		BigInteger publicExp = parser.read().getInteger();
+		BigInteger privateExp = parser.read().getInteger();
+		BigInteger prime1 = parser.read().getInteger();
+		BigInteger prime2 = parser.read().getInteger();
+		BigInteger exp1 = parser.read().getInteger();
+		BigInteger exp2 = parser.read().getInteger();
+		BigInteger crtCoef = parser.read().getInteger();
+
+		RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(
+				modulus, publicExp, privateExp, prime1, prime2,
+				exp1, exp2, crtCoef);
+
+		return keySpec;
 	}
 	
 }
