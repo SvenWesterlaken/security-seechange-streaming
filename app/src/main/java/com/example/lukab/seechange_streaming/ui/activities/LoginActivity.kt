@@ -3,11 +3,14 @@ package com.example.lukab.seechange_streaming.ui.activities
 import android.arch.lifecycle.Observer
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import com.example.lukab.seechange_streaming.R
 import android.widget.Toast
+import com.example.lukab.seechange_streaming.app.util.HexConverter
 import com.example.lukab.seechange_streaming.viewModel.LoginViewModel
+import java.security.MessageDigest
 
 class LoginActivity : BaseActivity() {
 
@@ -19,6 +22,9 @@ class LoginActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         loginViewModel = LoginViewModel(this.application);
         setContentView(R.layout.activity_login)
+
+        val hash = MessageDigest.getInstance("SHA-256").digest("henk".toByteArray())
+        Log.d("Hash", HexConverter.bytesToHex(hash).toString())
 
     }
 

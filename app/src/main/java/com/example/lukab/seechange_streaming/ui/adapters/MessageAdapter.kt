@@ -18,7 +18,14 @@ class MessageAdapter(private var context: Context, private var messages: List<Me
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val message: Message = messages[position]
-        holder.username!!.text = message.username
+
+        val displayname = if (message.fromStreamer) {
+            "You"
+        } else {
+            message.username
+        }
+
+        holder.username!!.text = displayname
         holder.message!!.text = message.message
     }
 
