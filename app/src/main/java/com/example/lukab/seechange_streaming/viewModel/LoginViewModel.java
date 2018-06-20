@@ -23,7 +23,7 @@ import org.json.JSONObject;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -43,7 +43,7 @@ public class LoginViewModel extends AndroidViewModel {
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
-		String url = "http://" + sharedPreferences.getString("pref_seechange_ip", "10.0.2.2") + ":" + sharedPreferences.getInt("pref_stream_user_api_port", 3000);
+		String url = "http://145.49.2.71:3000";
 		this.serviceGenerator = new ServiceGenerator(url);
 	}
 	
@@ -78,6 +78,7 @@ public class LoginViewModel extends AndroidViewModel {
 							preferences.edit().putString("username", username).apply();
 							preferences.edit().putString("token", response.body().getToken()).apply();
 							preferences.edit().putString("private_key", decryptPrivateKey(password, response.body().getPrivateKey())).apply();
+							preferences.edit().putString("public_key", response.body().getPublicKey()).apply();
 							
 							loggedIn.setValue(true);
 						} catch (Exception e) {
@@ -104,7 +105,7 @@ public class LoginViewModel extends AndroidViewModel {
 		
 	}
 	
-	public  static RSAPublicKey getPublicKeyFromString(String publicKey)
+	public static RSAPublicKey getPublicKeyFromString(String publicKey)
 		throws GeneralSecurityException {
 			String publicKeyPEM = publicKey;
 			
@@ -116,16 +117,19 @@ public class LoginViewModel extends AndroidViewModel {
 			return (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
 		}
 	
-	public  static RSAPrivateKey getPrivateKeyFromString(String privateKey)
+	public  static PrivateKey getPrivateKeyFromString(String privateKey)
 			throws GeneralSecurityException {
 		String privateKeyPEM = privateKey;
 		
 		privateKeyPEM = privateKeyPEM.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
 		
-		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
+		byte[] encoded = Base64.decode(privateKeyPEM, Base64.DEFAULT);
 		
 		KeyFactory kf = KeyFactory.getInstance("RSA");
-		return (RSAPrivateKey) kf.generatePrivate(new PKCS8EncodedKeySpec(encoded));
+
+		PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(encoded));
+		return privKey;
+
 	}
 		
 

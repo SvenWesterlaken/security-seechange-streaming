@@ -3,6 +3,7 @@ package com.example.lukab.seechange_streaming.ui.activities
 import android.arch.lifecycle.Observer
 import android.content.Intent
 import android.os.Bundle
+
 import android.view.View
 import android.widget.EditText
 import com.example.lukab.seechange_streaming.R
@@ -17,7 +18,7 @@ class LoginActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        loginViewModel = LoginViewModel(this.application);
+        loginViewModel = LoginViewModel(this.application)
         setContentView(R.layout.activity_login)
 
     }
@@ -41,7 +42,7 @@ class LoginActivity : BaseActivity() {
     }
 
 
-    private fun openStreamingActivity(){
+    fun openStreamingActivity(){
         val intent = Intent(this.applicationContext, StreamingActivity::class.java);
         startActivity(intent)
         finish()
