@@ -1,8 +1,7 @@
 <resources>
 
-    <!-- Base application theme. -->
+
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -16,6 +15,8 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+
+
     <style name="ToolBarStyle" parent="Theme.AppCompat">
         <item name="android:textColorPrimary">@color/colorSecondary</item>
         <item name="android:textColorSecondary">@color/colorSecondary</item>
@@ -28,5 +29,9 @@
         <item name="android:textAllCaps">true</item>
         <item name="android:textColor">@color/colorSecondary</item>
     </style>
+
+ <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

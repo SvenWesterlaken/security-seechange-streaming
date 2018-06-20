@@ -1,7 +1,5 @@
 package com.example.lukab.seechange_streaming.service.model;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 

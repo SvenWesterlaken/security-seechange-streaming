@@ -7,10 +7,9 @@ import com.example.lukab.seechange_streaming.service.model.UserResponse;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
-import retrofit2.http.Query;
+import retrofit2.http.Path;
 
 public interface LoginClient {
 	
@@ -25,8 +24,9 @@ public interface LoginClient {
 	@Headers({
 			"Accept: application/json", "Content-Type: application/json"
 	})
-	@GET("api/v1/users")
-	Call<UserResponse> getUser(@Query("username") String username);
+	@POST("api/v1/verify/{name}")
+	Call<UserResponse> verifyToken(@Path("name") String username, @Body RequestBody params);
+	
 	
 	
 }
