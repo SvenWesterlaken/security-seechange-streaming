@@ -110,7 +110,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         val privateKey = sharedPreferences.getString("private_key", null)
         val token = sharedPreferences.getString("token", null)
 
-        this.chatViewModel = ChatViewModel(url, username, privateKey)
+        this.chatViewModel = ChatViewModel(url, username, privateKey, application)
         this.chatViewModel.connect()
 
         this.chatViewModel.addErrorListener(errorListener)
@@ -249,7 +249,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
                 val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
                 val privateKeyString = preferences.getString("private_key", null)
                 Log.d("StreamingActivity: ", "message: $privateKeyString")
-                val privateKeyFromString = LoginViewModel.getPrivateKeyFromString(privateKeyString)
+                val privateKeyFromString = loginViewModel.getPrivateKeyFromString(privateKeyString)
                 Security.setPrivateKey(privateKeyFromString)
 
                 val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
