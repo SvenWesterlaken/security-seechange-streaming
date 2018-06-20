@@ -10,6 +10,8 @@ import android.util.Log;
 
 import com.github.faucamp.simplertmp.Util;
 
+import net.ossrs.rtmp.Security;
+
 /**
  * @author francois
  */
@@ -56,7 +58,10 @@ public class AmfString implements AmfData {
   @Override
   public void writeTo(OutputStream out) throws IOException {
     // Strings are ASCII encoded
+    Log.d("AmfString: ", "Base64Data after ASCII: " + Security.EncryptedDataToBase64(this.value.getBytes()));
     byte[] byteValue = this.value.getBytes("ASCII");
+
+    Log.d("AmfString: ", "Base64Data after ASCII: " + Security.EncryptedDataToBase64(byteValue));
     // Write the STRING data type definition (except if this String is used as a key)
     if (!key) {
       out.write(AmfType.STRING.getValue());

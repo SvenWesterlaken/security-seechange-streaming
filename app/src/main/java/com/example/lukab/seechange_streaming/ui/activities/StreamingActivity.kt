@@ -26,6 +26,8 @@ import com.example.lukab.seechange_streaming.ui.MainActivity
 import net.ossrs.rtmp.ConnectCheckerRtmp
 import net.ossrs.rtmp.Security
 import java.io.IOException
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -60,6 +62,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, View.OnClickListen
 
         loginViewModel = LoginViewModel(this.application)
        // checkSession()
+
     }
 
     fun checkSession(){
@@ -102,9 +105,14 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, View.OnClickListen
                     button.setText(R.string.stop_button)
                     val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
                     val privateKeyString = preferences.getString("private_key", null)
-                    Log.d("StreamingActivity: ", "message: $privateKeyString")
-                    val privateKeyFromString = LoginViewModel.getPrivateKeyFromString(privateKeyString)
+                    Log.d("StreamingActivity: ", "privatek: $privateKeyString")
+                    val privateKeyFromString = loginViewModel.getPrivateKeyFromString(privateKeyString)
                     Security.setPrivateKey(privateKeyFromString)
+
+                    val username = preferences.getString("username", null)
+                    Log.d("StreamingActivity: ", "username: $username")
+                    Security.setUsername(username)
+
                     rtmpCamera1.startStream(etUrl.text.toString())
                 } else {
                     Toast.makeText(this, "Error preparing stream, This device cant do it",
