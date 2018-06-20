@@ -11,7 +11,17 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Base64;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
+import javax.crypto.*;
+
+import com.example.lukab.seechange_streaming.app.utils.Asn1Object;
+import com.example.lukab.seechange_streaming.app.utils.DerParser;
 import com.example.lukab.seechange_streaming.data.network.LoginClient;
 import com.example.lukab.seechange_streaming.data.network.ServiceGenerator;
 import com.example.lukab.seechange_streaming.service.model.LoginResponse;
@@ -20,12 +30,14 @@ import com.example.lukab.seechange_streaming.service.model.UserResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
@@ -43,19 +55,13 @@ public class LoginViewModel extends AndroidViewModel {
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
-		String url = "http://" + sharedPreferences.getString("pref_seechange_ip", "10.0.2.2") + ":" + sharedPreferences.getInt("pref_stream_user_api_port", 3000);
+		String url = "http://145.49.56.174:3000";
 		this.serviceGenerator = new ServiceGenerator(url);
 	}
 	
 	public boolean isUsernameAndPasswordValid(String username, String password) {
 		
-		if (TextUtils.isEmpty(username)) {
-			return false;
-		}
-		if (TextUtils.isEmpty(password)) {
-			return false;
-		}
-		return true;
+		return !TextUtils.isEmpty(username) && !TextUtils.isEmpty(password);
 	}
 	
 	public LiveData<Boolean> login(final String username, final String password) {
@@ -84,10 +90,8 @@ public class LoginViewModel extends AndroidViewModel {
 							preferences.edit().putString("username", username).apply();
 							preferences.edit().putString("token", response.body().getToken()).apply();
 							preferences.edit().putString("private_key", decryptPrivateKey(password, response.body().getPrivateKey())).apply();
+							preferences.edit().putString("public_key", response.body().getPublicKey()).apply();
 							
-							//ToDo: delete logs
-							Log.d("e", preferences.getString("token", null));
-							Log.d("e",  decryptPrivateKey(password, response.body().getPrivateKey()));
 							loggedIn.setValue(true);
 						} catch (Exception e) {
 							Log.e("error", e.toString());
@@ -101,7 +105,7 @@ public class LoginViewModel extends AndroidViewModel {
 				
 				@Override
 				public void onFailure(Call<LoginResponse> call, Throwable t) {
-					Log.d("error", t.getMessage());
+					Log.d("error", "message: " + t.getMessage());
 					loggedIn.setValue(false);
 				}
 			});
@@ -113,7 +117,7 @@ public class LoginViewModel extends AndroidViewModel {
 		
 	}
 	
-	public  static RSAPublicKey getPublicKeyFromString(String publicKey)
+	public static RSAPublicKey getPublicKeyFromString(String publicKey)
 		throws GeneralSecurityException {
 			String publicKeyPEM = publicKey;
 			
@@ -122,59 +126,76 @@ public class LoginViewModel extends AndroidViewModel {
 			byte[] encoded = Base64.decode(publicKeyPEM, Base64.NO_PADDING);
 			
 			KeyFactory kf = KeyFactory.getInstance("RSA");
-			RSAPublicKey pubKey = (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
-			return pubKey;
+			return (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
 		}
 	
-	public  static RSAPrivateKey getPrivateKeyFromString(String privateKey)
+	public PrivateKey getPrivateKeyFromString(String privateKey)
 			throws GeneralSecurityException {
 		String privateKeyPEM = privateKey;
 		
-		privateKeyPEM = privateKeyPEM.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
+		privateKeyPEM = privateKeyPEM.replaceAll("\\n", "")
+				.replace("-----BEGIN RSA PRIVATE KEY-----", "")
+				.replace("-----END RSA PRIVATE KEY-----", "");
+		Log.d("LoginViewModel: ", "privatePem without begin and end: " + privateKeyPEM);
 		
-		byte[] encoded = Base64.decode(privateKeyPEM, Base64.NO_PADDING);
-		
-		KeyFactory kf = KeyFactory.getInstance("RSA");
-		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePublic(new X509EncodedKeySpec(encoded));
-		return privKey;
+		byte[] encoded = Base64.decode(privateKeyPEM, Base64.DEFAULT);
+
+//		PKCS8EncodedKeySpec keySpecPKCS8 = new EncodedKeySpec();
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+		RSAPrivateCrtKeySpec rsaKeySpec = null;
+
+		try {
+			rsaKeySpec = getRSAKeySpec(encoded);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (rsaKeySpec != null) {
+			PrivateKey privKey = kf.generatePrivate(rsaKeySpec);
+			return privKey;
+		} else {
+			return null;
+		}
 	}
 		
-
-	
-		
 	public LiveData<Boolean> checkToken(String token, String username){
-		LoginClient loginService = this.serviceGenerator.createService(LoginClient.class, token);
-	
-		final MutableLiveData<Boolean> loggedIn = new MutableLiveData<>();
+		LoginClient loginService =  serviceGenerator.createService(LoginClient.class);
+		JSONObject paramObject = new JSONObject();
+		RequestBody body;
+		final MutableLiveData<Boolean> validToken = new MutableLiveData<>();
+		
+		try {
+			paramObject.put("token", token);
+			body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), (paramObject).toString());
 			
-			Call<UserResponse> call = loginService.getUser(username);
+			Call<UserResponse> call = loginService.verifyToken(username, body);
 			call.enqueue(new Callback<UserResponse>() {
 				@Override
 				public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
 					if (response.isSuccessful()) {
 						
 						try {
-							Log.e("tokenSuccesful", response.message());
-						
+							validToken.setValue(true);
 						} catch (Exception e) {
 							Log.e("error", e.toString());
 						}
 						
-						
 					} else {
 						Log.d("error", response.message());
-						loggedIn.setValue(false);
+						validToken.setValue(false);
 					}
 				}
 				
 				@Override
 				public void onFailure(Call<UserResponse> call, Throwable t) {
 					Log.d("error", t.getMessage());
-					loggedIn.setValue(false);
-				}});
+					validToken.setValue(false);
+				}
+			});
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		
-		
-		return loggedIn;
+		return validToken;
 		
 		
 	}
@@ -196,6 +217,34 @@ public class LoginViewModel extends AndroidViewModel {
 		for (int i = 0; i < len; i++)
 			result[i] = Integer.valueOf(hexString.substring(2 * i, 2 * i + 2), 16).byteValue();
 		return result;
+	}
+
+	public RSAPrivateCrtKeySpec getRSAKeySpec(byte[] keyBytes) throws IOException {
+
+		DerParser parser = new DerParser(keyBytes);
+
+		Asn1Object sequence = parser.read();
+		if (sequence.getType() != DerParser.SEQUENCE)
+			throw new IOException("Invalid DER: not a sequence"); //$NON-NLS-1$
+
+		// Parse inside the sequence
+		parser = sequence.getParser();
+
+		parser.read(); // Skip version
+		BigInteger modulus = parser.read().getInteger();
+		BigInteger publicExp = parser.read().getInteger();
+		BigInteger privateExp = parser.read().getInteger();
+		BigInteger prime1 = parser.read().getInteger();
+		BigInteger prime2 = parser.read().getInteger();
+		BigInteger exp1 = parser.read().getInteger();
+		BigInteger exp2 = parser.read().getInteger();
+		BigInteger crtCoef = parser.read().getInteger();
+
+		RSAPrivateCrtKeySpec keySpec = new RSAPrivateCrtKeySpec(
+				modulus, publicExp, privateExp, prime1, prime2,
+				exp1, exp2, crtCoef);
+
+		return keySpec;
 	}
 	
 }

@@ -3,8 +3,13 @@ package com.example.lukab.seechange_streaming.service.model;
 import com.google.gson.annotations.SerializedName;
 
 public class UserResponse {
-	@SerializedName("publicKey")
-	public String publicKey;
+	@SerializedName("message")
+	public String message;
 	
-	public String getPublicKey(){ return publicKey; }
+	public String getMessage(){return message;}
+	
+	@SerializedName("username")
+	public String username;
+	
+	public String getUsername(){return username;}
 }

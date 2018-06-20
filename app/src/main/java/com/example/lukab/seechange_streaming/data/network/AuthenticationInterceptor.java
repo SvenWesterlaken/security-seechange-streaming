@@ -1,9 +1,5 @@
 package com.example.lukab.seechange_streaming.data.network;
 
-import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
-
 import java.io.IOException;
 
 import okhttp3.Interceptor;
