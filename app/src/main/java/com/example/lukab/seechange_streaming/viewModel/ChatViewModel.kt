@@ -64,9 +64,9 @@ class ChatViewModel(url: String, private val username: String, private val key: 
         HexConverter.bytesToHex(hash).toString()
 
 
-        val cipher = Cipher.getInstance("AES/ECB/PKCS7Padding")
-        cipher.init(Cipher.ENCRYPT_MODE, key as PrivateKey)
-        val clearbyte = cipher.doFinal()
+//        val cipher = Cipher.getInstance("AES/ECB/PKCS7Padding")
+//        cipher.init(Cipher.ENCRYPT_MODE, key as PrivateKey)
+//        val clearbyte = cipher.doFinal()
 
         return Base64.encodeToString(hash, Base64.DEFAULT)
     }
