@@ -137,8 +137,8 @@ public class LoginViewModel extends AndroidViewModel {
 	public PrivateKey getPrivateKeyFromString(String privateKey)
 			throws GeneralSecurityException {
 		String privateKeyPEM = privateKey;
-		
-		privateKeyPEM = privateKeyPEM.replaceAll("\\n", "")
+
+		privateKeyPEM = privateKeyPEM
 				.replace("-----BEGIN RSA PRIVATE KEY-----", "")
 				.replace("-----END RSA PRIVATE KEY-----", "");
 		Log.d("LoginViewModel: ", "privatePem without begin and end: " + privateKeyPEM);

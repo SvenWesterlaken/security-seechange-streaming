@@ -14,6 +14,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+//TODO security class for doing hashing, username and encryption
 public class Security {
     private static PrivateKey privateKey;
     private static String username;
