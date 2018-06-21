@@ -477,6 +477,7 @@ public class RtmpConnection implements RtmpPublisher {
 
     byte[] copyOfRange = Arrays.copyOfRange(data, 0, size);
     String hashedData = Security.HashData(copyOfRange);
+    Log.d("RtmpConnection: ", "HexedHash: " + hashedData);
     byte[] hashedBytes = Security.hexStringToByteArray(hashedData);
     byte[] encryptedHash = Security.EncryptData(hashedBytes);
     String base64EncryptedHash = Security.EncryptedDataToBase64(encryptedHash);
@@ -516,6 +517,7 @@ public class RtmpConnection implements RtmpPublisher {
     byte[] copyOfRange = Arrays.copyOfRange(data, 0, size);
     // hash the actual data
     String hashedData = Security.HashData(copyOfRange);
+    Log.d("RtmpConnection: ", "HexedHash: " + hashedData);
     // convert hashed data to byte array
     byte[] hashedBytes = Security.hexStringToByteArray(hashedData);
     // encrypt hashed byte array
