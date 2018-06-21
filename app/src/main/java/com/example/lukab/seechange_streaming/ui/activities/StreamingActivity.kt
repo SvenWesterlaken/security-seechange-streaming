@@ -1,65 +1,73 @@
 package com.example.lukab.seechange_streaming.ui.activities
 
-
+import android.Manifest
 import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.util.Log
+import android.preference.PreferenceManager
+import android.support.v4.content.ContextCompat
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import com.example.lukab.seechange_streaming.R
 import com.example.lukab.seechange_streaming.app.utils.Crypto.getPrivateKeyFromString
 import com.example.lukab.seechange_streaming.service.model.Message
 import com.example.lukab.seechange_streaming.ui.adapters.MessageAdapter
-import com.example.lukab.seechange_streaming.app.utils.Crypto
-import com.example.lukab.seechange_streaming.app.utils.Crypto.getPrivateKeyFromString
 import com.example.lukab.seechange_streaming.ui.custom.closeSoftKeyboard
+import com.example.lukab.seechange_streaming.viewModel.ChatViewModel
 import com.example.lukab.seechange_streaming.viewModel.LoginViewModel
+import com.github.nkzawa.emitter.Emitter
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.MultiplePermissionsReport
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.pedro.encoder.input.video.CameraOpenException
 import com.pedro.rtplibrary.rtmp.RtmpCamera1
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import net.ossrs.rtmp.ConnectCheckerRtmp
 import net.ossrs.rtmp.Security
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
+import org.json.JSONObject
+import java.security.PrivateKey
 import java.util.*
 
 
-
-class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Callback, View.OnFocusChangeListener {
-
-    lateinit var loginViewModel: LoginViewModel
-    lateinit var rtmpCamera1: RtmpCamera1
-    lateinit var button: Button
-    lateinit var bRecord: Button
-    lateinit var etUrl: EditText
+class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Callback, View.OnFocusChangeListener, MultiplePermissionsListener {
+    private lateinit var camera: RtmpCamera1
+    private lateinit var streamingButton: ImageView
+    private lateinit var cameraSwitchButton: ImageView
     private lateinit var panelSlider: SlidingUpPanelLayout
     private lateinit var chatInputText: EditText
+    private lateinit var loginViewModel: LoginViewModel
+    private lateinit var chatViewModel: ChatViewModel
+    private lateinit var chatView: RecyclerView
+    private lateinit var chatAdapter: RecyclerView.Adapter<MessageAdapter.ViewHolder>
+    private lateinit var surfaceView: SurfaceView
 
-    private var currentDateAndTime = ""
-    private var folder = File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/rtmp-rtsp-stream-client-java")
+    private lateinit var chatUrl: String
+    private lateinit var streamUrl: String
+    private lateinit var token: String
+    private lateinit var username: String
+    private lateinit var privateKey: PrivateKey
 
+    private var chatMessages: ArrayList<Message> = ArrayList()
+
+    private var isFrontCamera = false
+    private val RECORD_STOP: Int = 0
+    private val RECORD_START: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_streaming)
-        val surfaceView = findViewById<SurfaceView>(R.id.surfaceView);
-        button = findViewById(R.id.b_start_stop)
-        bRecord = findViewById(R.id.b_record)
-        etUrl = findViewById(R.id.et_rtp_url)
-        etUrl.setHint(R.string.hint_rtmp)
-        rtmpCamera1 = RtmpCamera1(surfaceView, this)
-        surfaceView.holder.addCallback(this)
 
         this.panelSlider = findViewById(R.id.sliding_layout)
 
@@ -107,10 +115,44 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
     private fun initChat() {
         this.chatInputText = findViewById(R.id.ChatEditText)
         this.chatInputText.onFocusChangeListener = this
-        this.loginViewModel = LoginViewModel(this.application)
 
-        checkSession()
+        this.chatAdapter = MessageAdapter(this, chatMessages)
+        this.chatView = findViewById(R.id.ChatRecyclerView)
+        chatView.layoutManager = LinearLayoutManager(this)
+        chatView.adapter = chatAdapter
 
+        this.chatViewModel = ChatViewModel(chatUrl, username)
+        this.chatViewModel.connect()
+
+        this.chatViewModel.addErrorListener(errorListener)
+        this.chatViewModel.addMessageListener(newMessageListener)
+
+        this.chatViewModel.authenticate(token, authenticationListener)
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Permission Hooks
+    //
+    // ------------------------------------------------------------------------------
+
+    override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+        this.camera = RtmpCamera1(this.surfaceView, this)
+        this.surfaceView.holder.addCallback(this)
+    }
+
+    override fun onPermissionRationaleShouldBeShown(permissions: MutableList<PermissionRequest>?, token: PermissionToken?) {}
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Hooks
+    //
+    // ------------------------------------------------------------------------------
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unsubscribeFromChat()
+        this.chatViewModel.destroy()
     }
 
     override fun onBackPressed() {
@@ -121,6 +163,15 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         }
     }
 
+    override fun onFocusChange(v: View?, isFocused: Boolean) {
+        this.panelSlider.isTouchEnabled = !isFocused
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Click Listeners
+    //
+    // ------------------------------------------------------------------------------
 
     fun settingsButtonClick(btn: View?) {
         val intent = Intent(this, SettingsActivity::class.java)
@@ -134,150 +185,172 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         }
     }
 
-
-    override fun onFocusChange(v: View?, isFocused: Boolean) {
-        this.panelSlider.isTouchEnabled = !isFocused
-
-    }
-
+    // ------------------------------------------------------------------------------
+    //
+    //    Token Validation (Session Check)
+    //
+    // ------------------------------------------------------------------------------
 
     private fun checkSession() {
-        val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
-
-        loginViewModel.checkToken(preferences.getString("token", null), preferences.getString("username", null)).observe(this, Observer<Boolean> { validToken ->
+        loginViewModel.checkToken(token,username).observe(this, Observer<Boolean> { validToken ->
             if (validToken == false) {
-                val intent = Intent(applicationContext, LoginActivity::class.java);
-                startActivity(intent)
+                startActivity(Intent(applicationContext, LoginActivity::class.java))
                 finish()
             }
         })
     }
 
-    override fun onConnectionSuccessRtmp() {
-        runOnUiThread { Toast.makeText(this@StreamingActivity, "Connection success", Toast.LENGTH_SHORT).show() }
-    }
+    // ------------------------------------------------------------------------------
+    //
+    //    Streaming interactions
+    //
+    // ------------------------------------------------------------------------------
 
-    override fun onConnectionFailedRtmp(reason: String) {
-        runOnUiThread {
-            Toast.makeText(this@StreamingActivity, "Connection failed. $reason", Toast.LENGTH_SHORT)
-                    .show()
-            rtmpCamera1.stopStream()
-            button.setText(R.string.start_button)
-        }
-    }
-
-    override fun onDisconnectRtmp() {
-        runOnUiThread { Toast.makeText(this@StreamingActivity, "Disconnected", Toast.LENGTH_SHORT).show() }
-    }
-
-    override fun onAuthErrorRtmp() {
-        runOnUiThread { Toast.makeText(this@StreamingActivity, "Auth error", Toast.LENGTH_SHORT).show() }
-    }
-
-    override fun onAuthSuccessRtmp() {
-        runOnUiThread { Toast.makeText(this@StreamingActivity, "Auth success", Toast.LENGTH_SHORT).show() }
-    }
-
-    fun startStreamButtonClick(view: View) {
-        if (!rtmpCamera1.isStreaming)
-        {
-            if (rtmpCamera1.isRecording || rtmpCamera1.prepareAudio() && rtmpCamera1.prepareVideo()) {
-                button.setText(R.string.stop_button)
-                val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
-                val privateKeyString = preferences.getString("private_key", null)
-                val username = preferences.getString("username", null)
-                Log.d("StreamingActivity: ", "message: $privateKeyString")
-                val privateKeyFromString = Crypto.getPrivateKeyFromString(privateKeyString)
-                Security.setPrivateKey(privateKeyFromString)
-                Security.setUsername(username)
-                rtmpCamera1.startStream(etUrl.text.toString())
+    fun startStreamButtonClick(view: View?) {
+        if (!camera.isStreaming) {
+            if (camera.isRecording || camera.prepareAudio() && camera.prepareVideo()) {
+                switchRecordIcon(RECORD_START)
+                camera.startStream(streamUrl)
             } else {
-                Toast.makeText(this, "Error preparing stream, This device cant do it",
-                        Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error preparing stream, This device can't do it", Toast.LENGTH_SHORT).show()
             }
-        } else
-        {
-            button.setText(R.string.start_button)
-            rtmpCamera1.stopStream()
+        } else {
+            switchRecordIcon(RECORD_STOP)
+            camera.stopStream()
         }
     }
 
-    fun switchCameraClick(view: View) {
+    fun switchCameraClick(view: View?) {
         try {
-            rtmpCamera1.switchCamera()
+            camera.switchCamera()
+            switchCameraIcon()
         } catch (e: CameraOpenException) {
             Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
         }
     }
 
-    fun recordClick(view: View) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                if (!rtmpCamera1.isRecording) {
-                    try {
-                        if (!folder.exists()) {
-                            folder.mkdir()
-                        }
-                        val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                        currentDateAndTime = sdf.format(Date())
-                        if (!rtmpCamera1.isStreaming) {
-                            if (rtmpCamera1.prepareAudio() && rtmpCamera1.prepareVideo()) {
-                                rtmpCamera1.startRecord(
-                                        folder.absolutePath + "/" + currentDateAndTime + ".mp4")
-                                bRecord.setText(R.string.stop_record)
-                                Toast.makeText(this, "Recording... ", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(this, "Error preparing stream, This device cant do it",
-                                        Toast.LENGTH_SHORT).show()
-                            }
-                        } else {
-                            rtmpCamera1.startRecord(
-                                    folder.absolutePath + "/" + currentDateAndTime + ".mp4")
-                            bRecord.setText(R.string.stop_record)
-                            Toast.makeText(this, "Recording... ", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: IOException) {
-                        rtmpCamera1.stopRecord()
-                        bRecord.setText(R.string.start_record)
-                        Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
-                    }
-
-                } else {
-                    rtmpCamera1.stopRecord()
-                    bRecord.setText(R.string.start_record)
-                    Toast.makeText(this,
-                            "file " + currentDateAndTime + ".mp4 saved in " + folder.absolutePath,
-                            Toast.LENGTH_SHORT).show()
-                    currentDateAndTime = ""
-                }
-            } else {
-                Toast.makeText(this, "You need min JELLY_BEAN_MR2(API 18) for do it...",
-                        Toast.LENGTH_SHORT).show()
-            }
+    override fun onConnectionSuccessRtmp() {
+        runOnUiThread { Toast.makeText(this, "Connection success", Toast.LENGTH_SHORT).show() }
     }
 
-    override fun surfaceCreated(surfaceHolder: SurfaceHolder) {
-
+    override fun onConnectionFailedRtmp(reason: String) {
+        runOnUiThread {
+            Toast.makeText(this, "Connection failed. $reason", Toast.LENGTH_SHORT).show()
+            switchRecordIcon(RECORD_STOP)
+            camera.stopStream()
+        }
     }
+
+    override fun onDisconnectRtmp() {
+        runOnUiThread { Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show() }
+    }
+
+    override fun onAuthErrorRtmp() {
+        runOnUiThread { Toast.makeText(this, "Auth error", Toast.LENGTH_SHORT).show() }
+    }
+
+    override fun onAuthSuccessRtmp() {
+        runOnUiThread { Toast.makeText(this, "Auth success", Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun switchCameraIcon() {
+        if (isFrontCamera) {
+            this.cameraSwitchButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_front_variant)
+            this.isFrontCamera = false
+        } else {
+            this.cameraSwitchButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_rear_variant)
+            this.isFrontCamera = true
+        }
+    }
+
+    private fun switchRecordIcon(mode: Int) {
+        if (mode == RECORD_STOP) {
+            streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button)
+        } else if (mode == RECORD_START) {
+            streamingButton.background = ContextCompat.getDrawable(applicationContext,R.drawable.camera_button_active)
+        }
+    }
+
+    override fun surfaceCreated(surfaceHolder: SurfaceHolder) {}
 
     override fun surfaceChanged(surfaceHolder: SurfaceHolder, i: Int, i1: Int, i2: Int) {
-        rtmpCamera1.startPreview()
+        camera.startPreview()
     }
 
     override fun surfaceDestroyed(surfaceHolder: SurfaceHolder) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && rtmpCamera1.isRecording) {
-            rtmpCamera1.stopRecord()
-            bRecord.setText(R.string.start_record)
-            Toast.makeText(this,
-                    "file " + currentDateAndTime + ".mp4 saved in " + folder.absolutePath,
-                    Toast.LENGTH_SHORT).show()
-            currentDateAndTime = ""
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && camera.isRecording) {
+            camera.stopRecord()
         }
-        if (rtmpCamera1.isStreaming) {
-            rtmpCamera1.stopStream()
-            button.text = resources.getString(R.string.start_button)
+
+        if (camera.isStreaming) {
+            camera.stopStream()
         }
-        rtmpCamera1.stopPreview()
+
+        camera.stopPreview()
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Chat interactions
+    //
+    // ------------------------------------------------------------------------------
+
+    fun sendMessage(v: View?) {
+        this.chatViewModel.sendMessage(chatInputText.text.toString())
+    }
+
+    private fun subscribeToChat() {
+        this.chatViewModel.subscribe()
+    }
+
+    private fun unsubscribeFromChat() {
+        this.chatViewModel.unsubscribe()
+    }
+
+    private fun addMessage(message: Message) {
+        this.chatMessages.add(message)
+        chatAdapter.notifyItemInserted(chatMessages.size - 1)
+        scrollToBottom()
+    }
+
+    private fun scrollToBottom() {
+        chatView.scrollToPosition(chatAdapter.itemCount - 1)
+    }
+
+    // ------------------------------------------------------------------------------
+    //
+    //    Listeners for Chat
+    //
+    // ------------------------------------------------------------------------------
+
+    private val errorListener = Emitter.Listener { args ->
+        this.runOnUiThread {
+            val data = args[0] as JSONObject
+            val message = data.getString("msg")
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val newMessageListener = Emitter.Listener { args ->
+        this.runOnUiThread {
+
+            val username = args[1] as String
+            val message = args[2] as String
+            val timestamp = args[3] as Long
+
+            addMessage(Message(this.chatViewModel.isStreamer(username), username, message, timestamp))
+        }
+    }
+
+    private val authenticationListener = Emitter.Listener { args ->
+        this.runOnUiThread {
+            val message: String = args[0] as String
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            subscribeToChat()
+        }
     }
 
 }
+
+
 
