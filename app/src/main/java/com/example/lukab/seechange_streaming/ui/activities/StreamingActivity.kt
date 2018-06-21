@@ -1,13 +1,10 @@
 package com.example.lukab.seechange_streaming.ui.activities
 
-import android.app.Application
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import com.example.lukab.seechange_streaming.R
 import com.example.lukab.seechange_streaming.viewModel.LoginViewModel
-import android.os.Environment.getExternalStorageDirectory
 import android.widget.Button
 import android.widget.EditText
 import com.pedro.rtplibrary.rtmp.RtmpCamera1
@@ -18,16 +15,12 @@ import android.view.WindowManager
 import android.widget.Toast
 import android.os.Build
 import android.view.SurfaceHolder
-import android.system.Os.mkdir
 import android.util.Log
-import java.nio.file.Files.exists
+import com.example.lukab.seechange_streaming.app.utils.Crypto.getPrivateKeyFromString
 import com.pedro.encoder.input.video.CameraOpenException
-import com.example.lukab.seechange_streaming.ui.MainActivity
 import net.ossrs.rtmp.ConnectCheckerRtmp
 import net.ossrs.rtmp.Security
 import java.io.IOException
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -106,7 +99,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, View.OnClickListen
                     val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
                     val privateKeyString = preferences.getString("private_key", null)
                     Log.d("StreamingActivity: ", "privatek: $privateKeyString")
-                    val privateKeyFromString = loginViewModel.getPrivateKeyFromString(privateKeyString)
+                    val privateKeyFromString = getPrivateKeyFromString(privateKeyString)
                     Security.setPrivateKey(privateKeyFromString)
 
                     val username = preferences.getString("username", null)
