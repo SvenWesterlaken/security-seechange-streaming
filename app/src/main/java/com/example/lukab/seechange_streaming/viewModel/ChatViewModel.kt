@@ -77,7 +77,7 @@ class ChatViewModel(url: String, private val username: String) {
 
         val hexByteArray = Security.hexStringToByteArray(HexConverter.bytesToHex(hash))
 
-        return Base64.encodeToString(Security.EncryptData(hexByteArray), Base64.DEFAULT).toLowerCase()
+        return Base64.encodeToString(Security.EncryptData(hexByteArray), Base64.NO_PADDING).toLowerCase()
     }
 
 }
