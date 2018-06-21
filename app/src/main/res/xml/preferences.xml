@@ -56,7 +56,7 @@
             android:title="IP Address"/>
 
         <EditTextPreference
-            android:defaultValue="@string/default_stream_port"
+            android:defaultValue="@string/default_seechange_stream_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
             android:key="pref_seechange_stream_port"
@@ -67,7 +67,7 @@
             android:title="Stream Port"/>
 
         <EditTextPreference
-            android:defaultValue="@string/default_api_port"
+            android:defaultValue="@string/default_seechange_api_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
             android:key="pref_seechange_api_port"
@@ -78,7 +78,7 @@
             android:title="API Port"/>
 
         <EditTextPreference
-            android:defaultValue="@string/default_chat_port"
+            android:defaultValue="@string/default_seechange_chat_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
             android:key="pref_seechange_chat_port"
@@ -94,7 +94,7 @@
         android:layout="@layout/row_preference_category">
 
         <EditTextPreference
-            android:defaultValue="@string/unknown_value"
+            android:defaultValue="@string/default_truyou_ip"
             android:icon="@drawable/access_point_network"
             android:inputType="text"
             android:key="pref_truyou_ip"
@@ -105,7 +105,7 @@
             android:title="IP Address"/>
 
         <EditTextPreference
-            android:defaultValue="@string/unknown_value"
+            android:defaultValue="@string/default_truyou_port"
             android:icon="@drawable/ethernet"
             android:inputType="number"
             android:key="pref_stream_port"

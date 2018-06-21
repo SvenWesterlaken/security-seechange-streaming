@@ -4,10 +4,12 @@
 
     <string name="title_activity_settings">Settings</string>
     <string name="unknown_value">Unknown</string>
-    <string name="default_chat_port">3000</string>
-    <string name="default_api_port">8081</string>
-    <string name="default_stream_port">1935</string>
-    <string name="default_ip">127.0.0.1</string>
+    <string name="default_truyou_port">3000</string>
+    <string name="default_seechange_chat_port">1337</string>
+    <string name="default_seechange_api_port">8081</string>
+    <string name="default_seechange_stream_port">1935</string>
+    <string name="default_seechange_ip">127.0.0.1</string>
+    <string name="default_truyou_ip">127.0.0.1</string>
     <string name="viewers_cunt">100k</string>
     <string name="hint_chat_message_input">Typ your chat message…</string>
     <string name="header_livestream_chat">Livestream Chat</string>
@@ -15,6 +17,7 @@
     <string name="title_activity_main">MainActivity</string>
 
 
+    <!-- Values related to Streaming -->
     <string name="rtsp_streamer">Custom RTSP</string>
     <string name="rtmp_streamer">Custom RTMP</string>
     <string name="default_rtmp">Default RTMP</string>

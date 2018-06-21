@@ -2,6 +2,7 @@ package com.example.lukab.seechange_streaming.ui.activities
 
 import android.Manifest
 import android.arch.lifecycle.Observer
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.database.Cursor
@@ -27,7 +28,7 @@ import com.karumi.dexter.listener.single.PermissionListener
 import de.hdodenhof.circleimageview.CircleImageView
 import java.io.File
 
-class AvatarActivity : AppCompatActivity(), PermissionListener {
+class AvatarActivity : BaseActivity(), PermissionListener {
     private lateinit var userSettingsViewModel: UserSettingsViewModel
     private lateinit var profilePicture: CircleImageView
     private lateinit var avatarImageUrl: String
@@ -44,7 +45,7 @@ class AvatarActivity : AppCompatActivity(), PermissionListener {
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val username = "svenwesterlaken"
+        val username = application.getSharedPreferences("user", Context.MODE_PRIVATE).getString("username", "unknown")
         this.avatarImageUrl = "http://${sharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${sharedPreferences.getString("pref_seechange_api_port", "8081")}$avatarUrl?username=$username"
 
         this.userSettingsViewModel = UserSettingsViewModel(application, username)

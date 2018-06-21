@@ -8,19 +8,17 @@ import android.view.View
 import android.widget.EditText
 import com.example.lukab.seechange_streaming.R
 import android.widget.Toast
+import com.example.lukab.seechange_streaming.app.util.HexConverter
 import com.example.lukab.seechange_streaming.viewModel.LoginViewModel
+import java.security.MessageDigest
 
 class LoginActivity : BaseActivity() {
-
-
     private lateinit var loginViewModel: LoginViewModel;
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         loginViewModel = LoginViewModel(this.application)
         setContentView(R.layout.activity_login)
-
     }
 
     fun login(v: View?) {
@@ -42,7 +40,7 @@ class LoginActivity : BaseActivity() {
     }
 
 
-    fun openStreamingActivity(){
+    private fun openStreamingActivity(){
         val intent = Intent(this.applicationContext, StreamingActivity::class.java);
         startActivity(intent)
         finish()
