@@ -79,10 +79,10 @@ public class AmfString implements AmfData {
 //    byte[] byteValue = Base64.decode(this.value, Base64.DEFAULT);
 
     // decode base64 string and encode it to byte array for transport
-    byte[] byteValue = Base64.encode(Base64.decode(this.value, Base64.DEFAULT), Base64.DEFAULT);
+    byte[] byteValue = Base64.encode(Base64.decode(this.value, Base64.NO_PADDING), Base64.NO_PADDING);
 
     // for testing if base64 string is same as before it was set in amfobject
-    byte[] byteValueTest = Base64.decode(this.value, Base64.DEFAULT);
+    byte[] byteValueTest = Base64.decode(this.value, Base64.NO_PADDING);
     Log.d("AmfString: ", "Base64Data after to bytes and to string: " + Base64.encodeToString(byteValue, Base64.DEFAULT));
 
     // Write the STRING data type definition (except if this String is used as a key)
