@@ -71,14 +71,13 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         this.panelSlider = findViewById(R.id.sliding_layout)
 
         this.initPreferences()
-        this.initLoginViewModel()
         this.initChat()
         this.initStream()
     }
 
     // ------------------------------------------------------------------------------
     //
-    //    Initiators
+    //    Initializers
     //
     // ------------------------------------------------------------------------------
 
@@ -86,12 +85,15 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
 
-        this.chatUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_chat_port", "3000")}"
+        this.chatUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_chat_port", "1337")}"
         this.streamUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_stream_port", "1935")}"
 
-        this.username = sharedPreferences.getString("username", null)
-        this.privateKey = loginViewModel.getPrivateKeyFromString(sharedPreferences.getString("private_key", null))
         this.token = sharedPreferences.getString("token", null)
+        this.username = sharedPreferences.getString("username", null)
+
+        this.initLoginViewModel()
+
+        this.privateKey = loginViewModel.getPrivateKeyFromString(sharedPreferences.getString("private_key", null))
 
         Security.setPrivateKey(privateKey)
     }
@@ -102,10 +104,10 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
     }
 
     private fun initStream() {
-        Dexter.withActivity(this).withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO).withListener(this).check()
         this.surfaceView = findViewById(R.id.surfaceView)
         this.cameraSwitchButton = findViewById(R.id.switch_camera)
-        streamingButton = findViewById(R.id.camera_button)
+        this.streamingButton = findViewById(R.id.camera_button)
+        Dexter.withActivity(this).withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO).withListener(this).check()
     }
 
     private fun initChat() {
@@ -117,7 +119,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         chatView.layoutManager = LinearLayoutManager(this)
         chatView.adapter = chatAdapter
 
-        this.chatViewModel = ChatViewModel(streamUrl, username, privateKey)
+        this.chatViewModel = ChatViewModel(chatUrl, username)
         this.chatViewModel.connect()
 
         this.chatViewModel.addErrorListener(errorListener)
