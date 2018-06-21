@@ -150,8 +150,7 @@ public class LoginViewModel extends AndroidViewModel {
 			e.printStackTrace();
 		}
 		if (rsaKeySpec != null) {
-			PrivateKey privKey = kf.generatePrivate(rsaKeySpec);
-			return privKey;
+			return kf.generatePrivate(rsaKeySpec);
 		} else {
 			return null;
 		}
