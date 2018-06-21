@@ -200,6 +200,7 @@ public class RtmpConnection implements RtmpPublisher {
       args.setProperty("videoFunction", 1);
       args.setProperty("pageUrl", pageUrl);
       args.setProperty("objectEncoding", 0);
+      args.setProperty("userName", Security.getUsername());
       invoke.addData(args);
       sendRtmpPacket(invoke);
     }
@@ -467,20 +468,25 @@ public class RtmpConnection implements RtmpPublisher {
     audio.setData(data, size);
     audio.getHeader().setAbsoluteTimestamp(dts);
     audio.getHeader().setMessageStreamId(currentStreamId);
-//    sendRtmpPacket(audio);
+    sendRtmpPacket(audio);
 
     // send command after audiopacket containing digital signature
     Command digitalSignatureStream = new Command("digitalSignature", 0);
     digitalSignatureStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
     digitalSignatureStream.getHeader().setMessageStreamId(currentStreamId);
 
-    byte[] audioData = audio.array();
-    String hashedData = Security.HashData(audioData);
-
+    byte[] copyOfRange = Arrays.copyOfRange(data, 0, size);
+    String hashedData = Security.HashData(copyOfRange);
+    Log.d("RtmpConnection: ", "HexedHash: " + hashedData);
+    byte[] hashedBytes = Security.hexStringToByteArray(hashedData);
+    byte[] encryptedHash = Security.EncryptData(hashedBytes);
+    String base64EncryptedHash = Security.EncryptedDataToBase64(encryptedHash);
+    Log.d("RtmpConnection: ", "Base64Data: " + base64EncryptedHash);
 
     AmfObject args = new AmfObject();
-    args.setProperty("DigitalSignature", hashedData);
-//    args.setProperty("OriginalAudioData", new String(audioData));
+//    args.setProperty("DigitalSignature", hashedData);
+    args.setProperty("DigitalSignature", base64EncryptedHash);
+    args.setProperty("LengthData", copyOfRange.length);
     digitalSignatureStream.addData(args);
     sendRtmpPacket(digitalSignatureStream);
   }
@@ -507,12 +513,26 @@ public class RtmpConnection implements RtmpPublisher {
     digitalSignatureStream.getHeader().setChunkStreamId(ChunkStreamInfo.RTMP_CID_OVER_STREAM);
     digitalSignatureStream.getHeader().setMessageStreamId(currentStreamId);
 
-    byte[] videoData = video.array();
-    String hashedData = Security.HashData(videoData);
+    // need to get a copy of filled data array sliced on the actual data size.
+    byte[] copyOfRange = Arrays.copyOfRange(data, 0, size);
+    // hash the actual data
+    String hashedData = Security.HashData(copyOfRange);
+    Log.d("RtmpConnection: ", "HexedHash: " + hashedData);
+    // convert hashed data to byte array
+    byte[] hashedBytes = Security.hexStringToByteArray(hashedData);
+    // encrypt hashed byte array
+    byte[] encryptedHash = Security.EncryptData(hashedBytes);
+    // encode encrypted byte array to Base64 string
+    String base64EncryptedHash = Security.EncryptedDataToBase64(encryptedHash);
+    Log.d("RtmpConnection: ", "Base64Data: " + base64EncryptedHash);
 
+    Log.d("RtmpConnection: ", "setBodyLength: " + size);
+    Log.d("RtmpConnection: ", "dataBodyLength: " + copyOfRange.length);
     AmfObject args = new AmfObject();
-    args.setProperty("DigitalSignature", hashedData);
-//    args.setProperty("OriginalVideoData", new String(videoData));
+//    args.setProperty("DigitalSignature", hashedData);
+    // put base64 encrypted hash string in property of command
+    args.setProperty("DigitalSignature", base64EncryptedHash);
+    args.setProperty("LengthData", copyOfRange.length);
     digitalSignatureStream.addData(args);
     sendRtmpPacket(digitalSignatureStream);
   }

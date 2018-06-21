@@ -1,5 +1,7 @@
 package com.github.faucamp.simplertmp.amf;
 
+import android.util.Log;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +36,7 @@ public class AmfObject implements AmfData {
     properties.put(key, new AmfBoolean(value));
   }
 
+  //TODO sets string property(AmfString) + key (Digital Signature)
   public void setProperty(String key, String value) {
     properties.put(key, new AmfString(value, false));
   }
@@ -55,7 +58,14 @@ public class AmfObject implements AmfData {
     for (Map.Entry<String, AmfData> entry : properties.entrySet()) {
       // The key must be a STRING type, and thus the "type-definition" byte is implied (not included in message)
       AmfString.writeStringTo(out, entry.getKey(), true);
-      entry.getValue().writeTo(out);
+      //TODO Here check if amfstring is digitalsignature
+      if (entry.getKey().equals("DigitalSignature")) {
+        ( (AmfString) entry.getValue()).writeToBase64(out);
+      } else {
+        Log.d("AmfObject: ", "Key: " + entry.getKey());
+        entry.getValue().writeTo(out);
+      }
+
     }
 
     // End the object

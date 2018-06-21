@@ -1,5 +1,6 @@
 package com.example.lukab.seechange_streaming.ui.activities
 
+
 import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.Intent
@@ -15,6 +16,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.example.lukab.seechange_streaming.R
+import com.example.lukab.seechange_streaming.app.utils.Crypto
+import com.example.lukab.seechange_streaming.app.utils.Crypto.getPrivateKeyFromString
 import com.example.lukab.seechange_streaming.ui.custom.closeSoftKeyboard
 import com.example.lukab.seechange_streaming.viewModel.LoginViewModel
 import com.pedro.encoder.input.video.CameraOpenException
@@ -26,6 +29,7 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 
 class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Callback, View.OnFocusChangeListener {
@@ -59,7 +63,8 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         this.chatInputText.onFocusChangeListener = this
         this.loginViewModel = LoginViewModel(this.application)
 
-        checkSession();
+        checkSession()
+
     }
 
     override fun onBackPressed() {
@@ -134,9 +139,11 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
                 button.setText(R.string.stop_button)
                 val preferences = application.getSharedPreferences("user", Context.MODE_PRIVATE)
                 val privateKeyString = preferences.getString("private_key", null)
+                val username = preferences.getString("username", null)
                 Log.d("StreamingActivity: ", "message: $privateKeyString")
-                val privateKeyFromString = LoginViewModel.getPrivateKeyFromString(privateKeyString)
+                val privateKeyFromString = Crypto.getPrivateKeyFromString(privateKeyString)
                 Security.setPrivateKey(privateKeyFromString)
+                Security.setUsername(username)
                 rtmpCamera1.startStream(etUrl.text.toString())
             } else {
                 Toast.makeText(this, "Error preparing stream, This device cant do it",

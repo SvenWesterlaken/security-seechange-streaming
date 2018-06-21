@@ -317,11 +317,6 @@ public class RtmpHeader {
           Util.writeUnsignedInt32(out, extendedTimestamp);
         }
 
-        Log.d("Message type: ", Byte.toString(messageType.value));
-
-
-        //TODO set digital signature as byte array in header
-
         break;
       }
       case TYPE_1_RELATIVE_LARGE: { // b01 = 8 bytes - like type 0. not including message ID (4 last bytes)
@@ -428,8 +423,4 @@ public class RtmpHeader {
     this.packetLength = packetLength;
   }
 
-  //TODO check digital signature
-  public void setDigitalSignature(String digitalSignature) {
-    this.digitalSignature = digitalSignature;
-  }
 }
