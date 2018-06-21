@@ -55,7 +55,7 @@ public class LoginViewModel extends AndroidViewModel {
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
-		String url = "http://145.49.56.174:3000";
+		String url = "http://145.49.4.23:3000";
 		this.serviceGenerator = new ServiceGenerator(url);
 	}
 	

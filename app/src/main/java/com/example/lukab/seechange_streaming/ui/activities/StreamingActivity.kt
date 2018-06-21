@@ -10,6 +10,7 @@ import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -85,8 +86,8 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val sharedPreferences = getSharedPreferences("user", Context.MODE_PRIVATE)
 
-        this.chatUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_chat_port", "1337")}"
-        this.streamUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${defaultSharedPreferences.getString("pref_seechange_stream_port", "1935")}"
+        this.chatUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.4.23")}:${defaultSharedPreferences.getString("pref_seechange_chat_port", "1337")}"
+        this.streamUrl = "http://${defaultSharedPreferences.getString("pref_seechange_ip", "145.49.4.23")}:${defaultSharedPreferences.getString("pref_seechange_stream_port", "1935")}"
 
         this.token = sharedPreferences.getString("token", null)
         this.username = sharedPreferences.getString("username", null)
@@ -100,7 +101,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
 
     private fun initLoginViewModel() {
         this.loginViewModel = LoginViewModel(this.application)
-        checkSession()
+        //checkSession()
     }
 
     private fun initStream() {
@@ -331,20 +332,18 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
 
     private val newMessageListener = Emitter.Listener { args ->
         this.runOnUiThread {
-            val data = args[0] as JSONObject
-            val username = data.getString("username")
-            val message = data.getString("msg")
-            val timestamp = data.getLong("timestamp")
-            val hash = data.getString("hash")
 
-            addMessage(Message(this.chatViewModel.isStreamer(username), message, username, timestamp, hash))
+            val username = args[1] as String
+            val message = args[2] as String
+            val timestamp = args[3] as Long
+
+            addMessage(Message(this.chatViewModel.isStreamer(username), username, message, timestamp))
         }
     }
 
     private val authenticationListener = Emitter.Listener { args ->
         this.runOnUiThread {
-            val data = args[0] as JSONObject
-            val message = data.getString("msg")
+            val message: String = args[0] as String
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             subscribeToChat()
         }
