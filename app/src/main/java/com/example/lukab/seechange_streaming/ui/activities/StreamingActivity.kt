@@ -44,6 +44,8 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        checkSession()
+
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_streaming)
         val surfaceView = findViewById<SurfaceView>(R.id.surfaceView);
@@ -59,7 +61,7 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
         this.chatInputText.onFocusChangeListener = this
         this.loginViewModel = LoginViewModel(this.application)
 
-        checkSession();
+
     }
 
     override fun onBackPressed() {

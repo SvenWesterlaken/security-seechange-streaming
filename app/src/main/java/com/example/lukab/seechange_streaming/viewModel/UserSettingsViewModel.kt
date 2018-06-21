@@ -29,7 +29,7 @@ class UserSettingsViewModel(application: Application, private val username: Stri
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.applicationContext)
         this.url = "http://${sharedPreferences.getString("pref_seechange_ip", "145.49.56.174")}:${sharedPreferences.getString("pref_seechange_api_port", "8081")}"
         val token = application.getSharedPreferences("user", Context.MODE_PRIVATE).getString("token", null)
-        this.serviceGenerator = ServiceGenerator(url)
+        this.serviceGenerator = ServiceGenerator(url, getApplication())
         this.settingsClient = this.serviceGenerator.createService(UserSettingsClient::class.java, token)
     }
 

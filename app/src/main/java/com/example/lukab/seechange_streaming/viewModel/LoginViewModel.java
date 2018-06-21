@@ -43,8 +43,8 @@ public class LoginViewModel extends AndroidViewModel {
 	public LoginViewModel(@NonNull Application application) {
 		super(application);
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application.getApplicationContext());
-		String url = "http://145.49.2.71:3000";
-		this.serviceGenerator = new ServiceGenerator(url);
+		String url = "https://145.49.2.71:3000";
+		this.serviceGenerator = new ServiceGenerator(url, getApplication().getApplicationContext());
 	}
 	
 	public boolean isUsernameAndPasswordValid(String username, String password) {
