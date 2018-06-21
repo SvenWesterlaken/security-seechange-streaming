@@ -19,6 +19,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import com.example.lukab.seechange_streaming.R
+import com.example.lukab.seechange_streaming.app.utils.Crypto.getPrivateKeyFromString
 import com.example.lukab.seechange_streaming.service.model.Message
 import com.example.lukab.seechange_streaming.ui.adapters.MessageAdapter
 import com.example.lukab.seechange_streaming.ui.custom.closeSoftKeyboard
@@ -94,9 +95,10 @@ class StreamingActivity : BaseActivity(), ConnectCheckerRtmp, SurfaceHolder.Call
 
         this.initLoginViewModel()
 
-        this.privateKey = loginViewModel.getPrivateKeyFromString(sharedPreferences.getString("private_key", null))
+        this.privateKey = getPrivateKeyFromString(sharedPreferences.getString("private_key", null))
 
         Security.setPrivateKey(privateKey)
+        Security.setUsername(username)
     }
 
     private fun initLoginViewModel() {
