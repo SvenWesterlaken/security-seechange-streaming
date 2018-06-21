@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.String;
 
+import android.util.Base64;
 import android.util.Log;
 
 import com.github.faucamp.simplertmp.Util;
@@ -58,10 +59,32 @@ public class AmfString implements AmfData {
   @Override
   public void writeTo(OutputStream out) throws IOException {
     // Strings are ASCII encoded
-    Log.d("AmfString: ", "Base64Data after ASCII: " + Security.EncryptedDataToBase64(this.value.getBytes()));
+
+    Log.d("AmfString: ", "No digital signature");
     byte[] byteValue = this.value.getBytes("ASCII");
 
-    Log.d("AmfString: ", "Base64Data after ASCII: " + Security.EncryptedDataToBase64(byteValue));
+    // Write the STRING data type definition (except if this String is used as a key)
+    if (!key) {
+      out.write(AmfType.STRING.getValue());
+    }
+    // Write 2 bytes indicating string length
+    Util.writeUnsignedInt16(out, byteValue.length);
+    // Write string
+    out.write(byteValue);
+  }
+
+  public void writeToBase64(OutputStream out) throws IOException {
+    // Strings are Base64encoded
+    Log.d("AmfString: ", "Base64string before to bytes: " + this.value);
+//    byte[] byteValue = Base64.decode(this.value, Base64.DEFAULT);
+
+    // decode base64 string and encode it to byte array for transport
+    byte[] byteValue = Base64.encode(Base64.decode(this.value, Base64.NO_PADDING), Base64.NO_PADDING);
+
+    // for testing if base64 string is same as before it was set in amfobject
+    byte[] byteValueTest = Base64.decode(this.value, Base64.NO_PADDING);
+    Log.d("AmfString: ", "Base64Data after to bytes and to string: " + Base64.encodeToString(byteValue, Base64.DEFAULT));
+
     // Write the STRING data type definition (except if this String is used as a key)
     if (!key) {
       out.write(AmfType.STRING.getValue());

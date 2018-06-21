@@ -14,6 +14,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+//TODO security class for doing hashing, username and encryption
 public class Security {
     private static PrivateKey privateKey;
     private static String username;
@@ -73,7 +74,7 @@ public class Security {
     }
 
     public static String EncryptedDataToBase64(byte[] encryptedData) {
-        return Base64.encodeToString(encryptedData, Base64.DEFAULT);
+        return Base64.encodeToString(encryptedData, Base64.NO_PADDING);
     }
 
     public static void setPrivateKey(PrivateKey privateKey) {
